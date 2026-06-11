@@ -32,15 +32,15 @@ export function BeforeAfterShowcase() {
             Treatment showcase
           </h2>
           <p className="mt-4 max-w-2xl text-lg leading-8 text-muted-foreground">
-            Use the slider to compare a placeholder case view. Real clinical photos can be
-            added after patient consent and doctor approval.
+            Use the slider to view real Khidmah Dental Surgery chamber photos while clinical
+            treatment-result photos are collected only with patient consent.
           </p>
 
           <div className="mt-8 overflow-hidden rounded-lg border border-border bg-white shadow-soft">
             <div className="relative aspect-[4/3] select-none overflow-hidden bg-muted">
               <Image
-                src="/images/before-after/after-treatment.svg"
-                alt="After treatment placeholder"
+                src="/images/IMG_3849.JPG"
+                alt="Chamber interior at Khidmah Dental Surgery"
                 fill
                 sizes="(min-width: 1024px) 56vw, 100vw"
                 className="object-cover"
@@ -51,8 +51,8 @@ export function BeforeAfterShowcase() {
                 style={{ width: `${sliderValue}%` }}
               >
                 <Image
-                  src="/images/before-after/before-treatment.svg"
-                  alt="Before treatment placeholder"
+                  src="/images/IMG_0905.JPG"
+                  alt="Treatment room at Khidmah Dental Surgery"
                   fill
                   sizes="(min-width: 1024px) 56vw, 100vw"
                   className="max-w-none object-cover"
@@ -110,8 +110,9 @@ export function BeforeAfterShowcase() {
               <div>
                 <h3 className="font-bold text-amber-950">Clinical disclaimer</h3>
                 <p className="mt-2 text-sm leading-7 text-amber-900">
-                  Images are placeholders. Actual treatment results vary from patient to patient.
-                  A consultation with Dr. Md. Iqbal Hossain is required before recommending any treatment.
+                  Images shown here are real chamber photos, not clinical before-and-after results.
+                  Actual treatment outcomes vary from patient to patient. A consultation with
+                  Dr. Md. Iqbal Hossain is required before recommending any treatment.
                 </p>
               </div>
             </div>

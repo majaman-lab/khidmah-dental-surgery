@@ -20,7 +20,6 @@ import {
   Smile,
   Sparkles,
   Stethoscope,
-  UserRound,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -284,10 +283,10 @@ export default function Home() {
               <div className="absolute -inset-5 rounded-[2rem] bg-accent/35 blur-2xl" />
               <div className="relative overflow-hidden rounded-lg border border-white bg-white shadow-soft">
                 <Image
-                  src="/images/khidmah-dental-chamber.webp"
+                  src="/images/khidmah-dental-chamber.jpg"
                   alt="Private dental chamber environment at Khidmah Dental Surgery"
-                  width={1280}
-                  height={853}
+                  width={1536}
+                  height={1024}
                   priority
                   sizes="(min-width: 1024px) 48vw, 100vw"
                   className="aspect-[4/3] h-full w-full object-cover"
@@ -300,8 +299,15 @@ export default function Home() {
                 className="relative mx-4 -mt-16 rounded-lg border border-border bg-white/94 p-5 shadow-soft backdrop-blur sm:mx-8 lg:absolute lg:-bottom-8 lg:left-0 lg:mx-0 lg:w-[88%]"
               >
                 <div className="flex items-start gap-4">
-                  <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
-                    <UserRound className="h-7 w-7" aria-hidden="true" />
+                  <span className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md bg-accent">
+                    <Image
+                      src="/images/doctor-portrait.png"
+                      alt="Dr. Md. Iqbal Hossain"
+                      width={1304}
+                      height={1694}
+                      sizes="64px"
+                      className="h-full w-full object-cover object-top"
+                    />
                   </span>
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
@@ -353,6 +359,16 @@ export default function Home() {
       <section id="doctor" className="content-section bg-white py-24 sm:py-32">
         <div className="section-shell grid gap-16 lg:grid-cols-[0.85fr_1.15fr]">
           <motion.div {...fadeUp}>
+            <div className="mb-8 overflow-hidden rounded-lg border border-border bg-background shadow-soft">
+              <Image
+                src="/images/doctor-portrait.png"
+                alt="Portrait of Dr. Md. Iqbal Hossain"
+                width={1304}
+                height={1694}
+                sizes="(min-width: 1024px) 34vw, 100vw"
+                className="aspect-[4/5] w-full object-cover object-top"
+              />
+            </div>
             <p className="text-sm font-bold uppercase tracking-[0.2em] text-primary">About Doctor</p>
             <h2 className="mt-3 text-3xl font-bold tracking-normal sm:text-4xl">Dr. Md. Iqbal Hossain</h2>
             <p className="mt-3 text-lg font-semibold text-primary">
@@ -496,13 +512,26 @@ export default function Home() {
               </Button>
             </div>
           </motion.div>
-          <motion.div {...fadeUp} className="map-frame overflow-hidden rounded-lg border border-border bg-white shadow-soft">
+          <motion.div {...fadeUp} className="grid gap-5">
+            <div className="overflow-hidden rounded-lg border border-border bg-white shadow-soft">
+              <Image
+                src="/images/IMG_3955.JPG"
+                alt="Exterior building location of Khidmah Dental Surgery"
+                width={4032}
+                height={3024}
+                sizes="(min-width: 1024px) 52vw, 100vw"
+                className="aspect-[4/3] w-full object-cover"
+                loading="lazy"
+              />
+            </div>
+            <div className="map-frame overflow-hidden rounded-lg border border-border bg-white shadow-soft">
             <iframe
               title="Khidmah Dental Surgery map"
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
               src="https://www.google.com/maps?q=Khidmah%20Dental%20Surgery%20Nimar%20Ali%20Mansion%202nd%20Floor%20Nimtola%20Beanibazar%20Sylhet%203170&z=18&output=embed"
             />
+            </div>
           </motion.div>
         </div>
       </section>

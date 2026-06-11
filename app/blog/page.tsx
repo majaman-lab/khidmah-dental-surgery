@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     title: "Dental Blog | Khidmah Dental Surgery",
     description:
       "Dental tips and treatment guides from Khidmah Dental Surgery in Beanibazar, Sylhet.",
-    images: ["/images/khidmah-dental-chamber.png"],
+    images: ["/images/khidmah-dental-chamber.jpg"],
   },
 };
 

@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     title: "Book Appointment | Khidmah Dental Surgery",
     description:
       "Request a dental appointment with Dr. Md. Iqbal Hossain at Khidmah Dental Surgery, Beanibazar.",
-    images: ["/images/khidmah-dental-chamber.png"],
+    images: ["/images/khidmah-dental-chamber.jpg"],
   },
 };
 

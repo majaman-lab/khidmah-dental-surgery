@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
-import { Camera, ChevronLeft, ChevronRight, ImagePlus, X } from "lucide-react";
+import { Camera, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import {
@@ -121,12 +121,11 @@ export function GallerySection() {
           className="mt-10 rounded-lg border border-dashed border-primary/30 bg-white/82 p-8 text-center shadow-sm"
         >
           <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-md bg-accent text-primary">
-            <ImagePlus className="h-7 w-7" aria-hidden="true" />
+            <Camera className="h-7 w-7" aria-hidden="true" />
           </span>
-          <h3 className="mt-5 text-xl font-bold">Official gallery photos coming soon</h3>
+          <h3 className="mt-5 text-xl font-bold">No photos in this category</h3>
           <p className="mx-auto mt-3 max-w-2xl leading-8 text-muted-foreground">
-            The gallery is ready for official Khidmah Dental Surgery photos. Add real doctor,
-            chamber, and equipment images to the gallery manifest to publish them here.
+            Choose another category to view more real Khidmah Dental Surgery photos.
           </p>
         </motion.div>
       )}

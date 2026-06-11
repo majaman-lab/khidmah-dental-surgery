@@ -56,7 +56,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: service.metaTitle,
       description: service.metaDescription,
-      images: ["/images/khidmah-dental-chamber.png"],
+      images: ["/images/khidmah-dental-chamber.jpg"],
     },
   };
 }

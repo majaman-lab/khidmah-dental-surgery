@@ -36,10 +36,10 @@ export const metadata: Metadata = {
     siteName: "Khidmah Dental Surgery",
     images: [
       {
-        url: "/images/khidmah-dental-chamber.png",
+        url: "/images/khidmah-dental-chamber.jpg",
         width: 1536,
         height: 1024,
-        alt: "Modern private dental chamber interior",
+        alt: "Khidmah Dental Surgery chamber interior",
       },
     ],
     locale: "en_US",
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: siteTitle,
     description: siteDescription,
-    images: ["/images/khidmah-dental-chamber.png"],
+    images: ["/images/khidmah-dental-chamber.jpg"],
   },
   alternates: {
     canonical: siteUrl,
@@ -83,7 +83,7 @@ export default function RootLayout({
     "@type": "Dentist",
     name: "Khidmah Dental Surgery",
     url: siteUrl,
-    image: `${siteUrl}/images/khidmah-dental-chamber.png`,
+    image: `${siteUrl}/images/khidmah-dental-chamber.jpg`,
     telephone: "01727-529609",
     email: "drmdiqbalhussain@gmail.com",
     founder: {
