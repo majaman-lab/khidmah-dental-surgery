@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowRight, BookOpen, CalendarCheck } from "lucide-react";
 
 import { BlogListing } from "@/components/blog-listing";
-import { blogPosts } from "@/lib/blog-posts";
+import { getPublicBlogPosts } from "@/lib/cms-blog";
 
 export const metadata: Metadata = {
   title: "Dental Blog | Khidmah Dental Surgery",
@@ -28,7 +28,8 @@ export const metadata: Metadata = {
   },
 };
 
-export default function BlogPage() {
+export default async function BlogPage() {
+  const posts = await getPublicBlogPosts();
   const schema = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
@@ -79,7 +80,7 @@ export default function BlogPage() {
         </div>
       </section>
 
-      <BlogListing posts={blogPosts} />
+      <BlogListing posts={posts} />
     </main>
   );
 }

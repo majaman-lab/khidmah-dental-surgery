@@ -25,7 +25,7 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   Accordion,
@@ -200,8 +200,140 @@ const heroReveal = {
   transition: { duration: 0.7, ease: smoothEase },
 };
 
+type CmsSection = {
+  section_key: string;
+  title: string;
+  description: string;
+  content?: {
+    body?: string;
+  };
+};
+
+type CmsContent = {
+  sections?: CmsSection[];
+  contact?: Partial<{
+    phone: string;
+    email: string;
+    facebookUrl: string;
+    whatsappNumber: string;
+    address: string;
+    mapUrl: string;
+    mapEmbedUrl: string;
+  }>;
+  doctor?: Partial<{
+    name: string;
+    designation: string;
+    introduction: string;
+    bmdc_registration: string;
+    photo_url: string;
+  }>;
+  services?: Array<{
+    title: string;
+    slug: string;
+    description: string;
+    icon: string;
+  }>;
+  faqs?: Array<{
+    question: string;
+    answer: string;
+  }>;
+};
+
+const iconMap: Record<string, LucideIcon> = {
+  Award,
+  BadgeCheck,
+  CheckCircle2,
+  ShieldCheck,
+  Smile,
+  Sparkles,
+  Stethoscope,
+};
+
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [cmsContent, setCmsContent] = useState<CmsContent | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+
+    fetch("/api/site-content")
+      .then((response) => response.json())
+      .then((data: CmsContent & { configured?: boolean }) => {
+        if (mounted && data.configured !== false) {
+          setCmsContent(data);
+        }
+      })
+      .catch(() => undefined);
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const sectionMap = useMemo(() => {
+    return new Map((cmsContent?.sections || []).map((section) => [section.section_key, section]));
+  }, [cmsContent]);
+
+  const section = (key: string, fallback: { title: string; description: string; body?: string }) => {
+    const cmsSection = sectionMap.get(key);
+    return {
+      title: cmsSection?.title || fallback.title,
+      description: cmsSection?.description || fallback.description,
+      body: cmsSection?.content?.body || fallback.body || "",
+    };
+  };
+
+  const heroSection = section("hero", {
+    title: "Khidmah Dental Surgery",
+    description: "Professional dental care in Beanibazar by Dr. Md. Iqbal Hossain.",
+    body: "A quiet single-doctor dental chamber for calm consultations, clear treatment explanation, and appointment-based care in Sylhet.",
+  });
+  const servicesSection = section("services", {
+    title: "Focused dental care for confident smiles",
+    description: "Essential dental treatments delivered through a personal chamber model with careful consultation and clear next steps.",
+  });
+  const doctorSection = section("doctor", {
+    title: "Dr. Md. Iqbal Hossain",
+    description:
+      "Khidmah Dental Surgery is intentionally positioned as a personal chamber, not a hospital or multi-doctor clinic. Patients meet the doctor, understand their dental condition, and receive a practical treatment path shaped around trust and comfort.",
+  });
+  const whySection = section("why_choose", {
+    title: "Why patients choose Khidmah Dental",
+    description: "A personal dental chamber experience shaped around trust, comfort, and practical appointment conversion.",
+  });
+  const faqSection = section("faq", {
+    title: "Before your appointment",
+    description: "Quick answers that set the right expectation for a personal dental chamber.",
+  });
+  const contactSection = section("contact", {
+    title: "Book a chamber visit",
+    description: "For the best experience, request an appointment before visiting Khidmah Dental Surgery.",
+  });
+  const contact = cmsContent?.contact || {};
+  const livePhoneNumber = contact.phone || phoneNumber;
+  const liveEmail = contact.email || email;
+  const liveFacebookUrl = contact.facebookUrl || facebookUrl;
+  const liveAddress = contact.address || address;
+  const liveMapUrl = contact.mapUrl || mapUrl;
+  const liveMapEmbedUrl =
+    contact.mapEmbedUrl ||
+    "https://www.google.com/maps?q=Khidmah%20Dental%20Surgery%20Nimar%20Ali%20Mansion%202nd%20Floor%20Nimtola%20Beanibazar%20Sylhet%203170&z=18&output=embed";
+  const liveTelHref = `tel:${livePhoneNumber}`;
+  const liveWhatsappUrl = `https://wa.me/${
+    contact.whatsappNumber || "8801727529609"
+  }?text=I%20want%20to%20book%20an%20appointment%20at%20Khidmah%20Dental%20Surgery`;
+  const doctorProfile = cmsContent?.doctor || {};
+  const displayedServices = cmsContent?.services?.length
+    ? cmsContent.services.map((service) => ({
+        title: service.title,
+        slug: service.slug,
+        text: service.description,
+        icon: iconMap[service.icon] || Smile,
+      }))
+    : services;
+  const displayedFaqs = cmsContent?.faqs?.length
+    ? cmsContent.faqs.map((faq) => ({ q: faq.question, a: faq.answer }))
+    : faqs;
 
   return (
     <main id="main-content" className="min-h-screen overflow-hidden">
@@ -279,13 +411,13 @@ export default function Home() {
               Owner & Chief Consultant, Beanibazar
             </div>
             <h1 className="max-w-3xl text-[2.7rem] font-bold leading-[1.06] tracking-normal text-foreground sm:text-5xl lg:text-6xl">
-              Khidmah Dental Surgery
+              {heroSection.title}
             </h1>
             <p className="mt-5 max-w-2xl text-xl font-semibold leading-8 text-primary sm:text-2xl sm:leading-9">
-              Professional dental care in Beanibazar by Dr. Md. Iqbal Hossain.
+              {heroSection.description}
             </p>
             <p className="mt-5 max-w-2xl text-base leading-8 text-muted-foreground sm:text-lg">
-              A quiet single-doctor dental chamber for calm consultations, clear treatment explanation, and appointment-based care in Sylhet.
+              {heroSection.body}
             </p>
             <div className="mt-9">
               <Button size="lg" className="h-14 bg-[#1f8f5f] px-7 text-base shadow-sm hover:bg-[#18764f]" asChild>
@@ -347,9 +479,9 @@ export default function Home() {
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
                       Meet Your Dentist
                     </p>
-                    <h2 className="mt-1 text-xl font-bold">Dr. Md. Iqbal Hossain</h2>
+                    <h2 className="mt-1 text-xl font-bold">{doctorProfile.name || "Dr. Md. Iqbal Hossain"}</h2>
                     <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                      Owner & Chief Consultant, Khidmah Dental Surgery, Beanibazar.
+                      {doctorProfile.designation || "Owner & Chief Consultant, Khidmah Dental Surgery, Beanibazar."}
                     </p>
                   </div>
                 </div>
@@ -362,11 +494,11 @@ export default function Home() {
       <SectionHeader
         id="services"
         eyebrow="Services"
-        title="Focused dental care for confident smiles"
-        text="Essential dental treatments delivered through a personal chamber model with careful consultation and clear next steps."
+        title={servicesSection.title}
+        text={servicesSection.description}
       />
       <section className="section-shell content-section grid gap-5 pb-28 md:grid-cols-2 lg:grid-cols-3">
-        {services.map((service, index) => (
+        {displayedServices.map((service, index) => (
           <motion.div key={service.title} {...fadeUp} whileHover={{ y: -4 }} transition={{ duration: 0.55, delay: index * 0.04 }}>
             <Card className="h-full bg-white/86">
               <CardHeader>
@@ -404,12 +536,14 @@ export default function Home() {
               />
             </div>
             <p className="text-sm font-bold uppercase tracking-[0.2em] text-primary">About Doctor</p>
-            <h2 className="mt-3 text-3xl font-bold tracking-normal sm:text-4xl">Dr. Md. Iqbal Hossain</h2>
+            <h2 className="mt-3 text-3xl font-bold tracking-normal sm:text-4xl">
+              {doctorProfile.name || doctorSection.title}
+            </h2>
             <p className="mt-3 text-lg font-semibold text-primary">
-              Owner & Chief Consultant, Khidmah Dental Surgery, Beanibazar
+              {doctorProfile.designation || "Owner & Chief Consultant, Khidmah Dental Surgery, Beanibazar"}
             </p>
             <p className="mt-5 text-lg leading-8 text-muted-foreground">
-              Khidmah Dental Surgery is intentionally positioned as a personal chamber, not a hospital or multi-doctor clinic. Patients meet the doctor, understand their dental condition, and receive a practical treatment path shaped around trust and comfort.
+              {doctorProfile.introduction || doctorSection.description}
             </p>
             <div className="mt-10 grid gap-3">
               <InfoRow icon={Clock3} text="Appointment-first care flow" />
@@ -438,8 +572,8 @@ export default function Home() {
       <SectionHeader
         id="why-choose"
         eyebrow="Why Choose"
-        title="Why patients choose Khidmah Dental"
-        text="A personal dental chamber experience shaped around trust, comfort, and practical appointment conversion."
+        title={whySection.title}
+        text={whySection.description}
       />
       <section className="section-shell content-section grid gap-5 pb-28 md:grid-cols-2 lg:grid-cols-3">
         {whyChoose.map((item, index) => (
@@ -468,14 +602,14 @@ export default function Home() {
         <div className="section-shell grid gap-12 lg:grid-cols-[0.8fr_1.2fr]">
           <motion.div {...fadeUp}>
             <p className="text-sm font-bold uppercase tracking-[0.2em] text-primary">FAQ</p>
-            <h2 className="mt-3 text-3xl font-bold tracking-normal sm:text-4xl">Before your appointment</h2>
+            <h2 className="mt-3 text-3xl font-bold tracking-normal sm:text-4xl">{faqSection.title}</h2>
             <p className="mt-5 leading-8 text-muted-foreground">
-              Quick answers that set the right expectation for a personal dental chamber.
+              {faqSection.description}
             </p>
           </motion.div>
           <motion.div {...fadeUp} className="rounded-lg border border-border bg-background/80 p-3 shadow-soft sm:p-4">
             <Accordion type="single" collapsible defaultValue="item-0">
-              {faqs.map((faq, index) => (
+              {displayedFaqs.map((faq, index) => (
                 <AccordionItem
                   key={faq.q}
                   value={`item-${index}`}
@@ -499,9 +633,9 @@ export default function Home() {
         <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
           <motion.div {...fadeUp} className="rounded-lg border border-border bg-white p-6 shadow-soft sm:p-8">
             <p className="text-sm font-bold uppercase tracking-[0.2em] text-primary">Contact</p>
-            <h2 className="mt-3 text-3xl font-bold tracking-normal">Book a chamber visit</h2>
+            <h2 className="mt-3 text-3xl font-bold tracking-normal">{contactSection.title}</h2>
             <p className="mt-4 leading-8 text-muted-foreground">
-              For the best experience, request an appointment before visiting Khidmah Dental Surgery.
+              {contactSection.description}
             </p>
             <div className="mt-8 grid gap-4">
               <ContactLine
@@ -511,7 +645,7 @@ export default function Home() {
                   <>
                     Khidmah Dental Surgery
                     <br />
-                    {address}
+                    {liveAddress}
                   </>
                 }
               />
@@ -519,23 +653,23 @@ export default function Home() {
               <ContactLine
                 icon={Phone}
                 label="Phone"
-                value={<a href={telHref} className="font-semibold text-primary hover:underline">{phoneNumber}</a>}
+                value={<a href={liveTelHref} className="font-semibold text-primary hover:underline">{livePhoneNumber}</a>}
               />
               <ContactLine
                 icon={Mail}
                 label="Email"
-                value={<a href={`mailto:${email}`} className="font-semibold text-primary hover:underline">{email}</a>}
+                value={<a href={`mailto:${liveEmail}`} className="font-semibold text-primary hover:underline">{liveEmail}</a>}
               />
             </div>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Button variant="outline" asChild>
-                <a href={facebookUrl} target="_blank" rel="noreferrer">
+                <a href={liveFacebookUrl} target="_blank" rel="noreferrer">
                   <Facebook className="h-4 w-4" aria-hidden="true" />
                   Facebook
                 </a>
               </Button>
               <Button variant="outline" asChild>
-                <a href={mapUrl} target="_blank" rel="noreferrer">
+                <a href={liveMapUrl} target="_blank" rel="noreferrer">
                   <MapPin className="h-4 w-4" aria-hidden="true" />
                   Map
                 </a>
@@ -548,7 +682,7 @@ export default function Home() {
                 title="Khidmah Dental Surgery map"
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
-                src="https://www.google.com/maps?q=Khidmah%20Dental%20Surgery%20Nimar%20Ali%20Mansion%202nd%20Floor%20Nimtola%20Beanibazar%20Sylhet%203170&z=18&output=embed"
+                src={liveMapEmbedUrl}
               />
             </div>
             <div className="overflow-hidden rounded-lg border border-border bg-white shadow-soft">
@@ -579,7 +713,7 @@ export default function Home() {
       </footer>
 
       <a
-        href={whatsappUrl}
+        href={liveWhatsappUrl}
         target="_blank"
         rel="noreferrer"
         className="fixed bottom-5 right-5 z-50 flex h-16 w-16 items-center justify-center rounded-full bg-[#1f8f5f] text-white shadow-soft ring-8 ring-[#1f8f5f]/14 transition hover:scale-105 sm:h-14 sm:w-auto sm:rounded-md sm:px-5"

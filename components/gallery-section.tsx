@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { Camera, ChevronLeft, ChevronRight, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   galleryCategories,
@@ -20,14 +20,32 @@ const categoryOptions: ActiveCategory[] = [allCategory, ...galleryCategories];
 export function GallerySection() {
   const [activeCategory, setActiveCategory] = useState<ActiveCategory>(allCategory);
   const [activeItem, setActiveItem] = useState<GalleryItem | null>(null);
+  const [items, setItems] = useState<GalleryItem[]>(galleryItems);
+
+  useEffect(() => {
+    let mounted = true;
+
+    fetch("/api/gallery")
+      .then((response) => response.json())
+      .then((data: { items?: GalleryItem[] }) => {
+        if (mounted && data.items?.length) {
+          setItems(data.items);
+        }
+      })
+      .catch(() => undefined);
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const filteredItems = useMemo(() => {
     if (activeCategory === allCategory) {
-      return galleryItems;
+      return items;
     }
 
-    return galleryItems.filter((item) => item.category === activeCategory);
-  }, [activeCategory]);
+    return items.filter((item) => item.category === activeCategory);
+  }, [activeCategory, items]);
 
   const activeIndex = activeItem ? filteredItems.findIndex((item) => item.src === activeItem.src) : -1;
 

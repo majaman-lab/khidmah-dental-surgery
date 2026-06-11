@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import { ArrowRight, CalendarCheck, MessageCircle, Phone } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { blogPosts, getBlogPost } from "@/lib/blog-posts";
+import { blogPosts } from "@/lib/blog-posts";
+import { getPublicBlogPost, getPublicBlogPosts } from "@/lib/cms-blog";
 
 type BlogDetailProps = {
   params: Promise<{
@@ -25,7 +26,7 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: BlogDetailProps): Promise<Metadata> {
   const { slug } = await params;
-  const post = getBlogPost(slug);
+  const post = await getPublicBlogPost(slug);
 
   if (!post) {
     return {};
@@ -55,15 +56,15 @@ export async function generateMetadata({ params }: BlogDetailProps): Promise<Met
 
 export default async function BlogDetailPage({ params }: BlogDetailProps) {
   const { slug } = await params;
-  const post = getBlogPost(slug);
+  const [post, posts] = await Promise.all([getPublicBlogPost(slug), getPublicBlogPosts()]);
 
   if (!post) {
     notFound();
   }
 
-  const relatedPosts = blogPosts
+  const relatedPosts = posts
     .filter((item) => item.slug !== post.slug && item.category === post.category)
-    .concat(blogPosts.filter((item) => item.slug !== post.slug && item.category !== post.category))
+    .concat(posts.filter((item) => item.slug !== post.slug && item.category !== post.category))
     .slice(0, 3);
   const schema = {
     "@context": "https://schema.org",

@@ -1,6 +1,7 @@
 "use server";
 
 import { Resend } from "resend";
+import { createClient } from "@supabase/supabase-js";
 
 import { appointmentSchema, type AppointmentValues } from "@/lib/appointment-schema";
 
@@ -30,6 +31,7 @@ export async function submitAppointment(
   }
 
   const data = parsed.data;
+  await saveAppointment(data);
   const messageLines = [
     "New Appointment Request - Khidmah Dental Surgery",
     `Patient Name: ${data.fullName}`,
@@ -94,6 +96,26 @@ export async function submitAppointment(
       error: "Could not send appointment request. Please try again or call the chamber.",
     };
   }
+}
+
+async function saveAppointment(data: AppointmentValues) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!url || !anonKey) {
+    return;
+  }
+
+  const supabase = createClient(url, anonKey);
+  await supabase.from("appointments").insert({
+    patient_name: data.fullName,
+    mobile_number: data.mobileNumber,
+    service_needed: data.serviceNeeded,
+    preferred_date: data.preferredDate,
+    preferred_time: data.preferredTime,
+    message: data.message || "",
+    status: "Pending",
+  });
 }
 
 function escapeHtml(value: string) {
