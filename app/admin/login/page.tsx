@@ -15,6 +15,15 @@ export default async function AdminLoginPage({
   searchParams: Promise<{ error?: string; next?: string }>;
 }) {
   const params = await searchParams;
+  const missingEnv = (
+    [
+      ["NEXT_PUBLIC_SUPABASE_URL", process.env.NEXT_PUBLIC_SUPABASE_URL],
+      ["NEXT_PUBLIC_SUPABASE_ANON_KEY", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY],
+    ] as const
+  )
+    .filter(([, value]) => !value)
+    .map(([key]) => key);
+  const isConfigured = missingEnv.length === 0;
 
   return (
     <main className="grid min-h-screen place-items-center bg-background px-4 py-12">
@@ -27,6 +36,16 @@ export default async function AdminLoginPage({
         <p className="mt-3 leading-7 text-muted-foreground">
           Sign in to manage appointments, content, services, gallery, blog posts, and SEO.
         </p>
+
+        {!isConfigured ? (
+          <div className="mt-5 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+            <p className="font-bold">Supabase setup required</p>
+            <p className="mt-2 leading-6">
+              The login form is available, but authentication will not work until these Vercel
+              environment variables are configured: {missingEnv.join(", ")}.
+            </p>
+          </div>
+        ) : null}
 
         {params.error ? (
           <div className="mt-5 rounded-md border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700">
@@ -59,7 +78,7 @@ export default async function AdminLoginPage({
           />
         </label>
 
-        <Button type="submit" size="lg" className="mt-6 w-full">
+        <Button type="submit" size="lg" className="mt-6 w-full" disabled={!isConfigured}>
           Login
         </Button>
 

@@ -67,6 +67,19 @@ export default async function AdminPage({
 }: {
   searchParams: Promise<AdminSearchParams>;
 }) {
+  const missingEnv = (
+    [
+      ["NEXT_PUBLIC_SUPABASE_URL", process.env.NEXT_PUBLIC_SUPABASE_URL],
+      ["NEXT_PUBLIC_SUPABASE_ANON_KEY", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY],
+    ] as const
+  )
+    .filter(([, value]) => !value)
+    .map(([key]) => key);
+
+  if (missingEnv.length > 0) {
+    return <AdminSetupRequired missingEnv={missingEnv} />;
+  }
+
   const params = await searchParams;
   const activeTab = params.tab || "dashboard";
   const { supabase, user } = await requireAdmin();
@@ -195,6 +208,28 @@ export default async function AdminPage({
           {activeTab === "account" ? <AccountPanel email={user.email || ""} /> : null}
         </section>
       </div>
+    </main>
+  );
+}
+
+function AdminSetupRequired({ missingEnv }: { missingEnv: string[] }) {
+  return (
+    <main className="grid min-h-screen place-items-center bg-background px-4 py-12">
+      <section className="w-full max-w-2xl rounded-lg border border-border bg-white p-6 shadow-soft sm:p-8">
+        <p className="text-sm font-bold uppercase tracking-[0.2em] text-primary">Admin Setup</p>
+        <h1 className="mt-3 text-3xl font-bold tracking-normal">Supabase configuration required</h1>
+        <p className="mt-4 leading-8 text-muted-foreground">
+          The admin dashboard is installed, but it cannot authenticate or load database content
+          until Supabase environment variables are added in Vercel and the project is redeployed.
+        </p>
+        <div className="mt-5 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          <p className="font-bold">Missing variables</p>
+          <p className="mt-2">{missingEnv.join(", ")}</p>
+        </div>
+        <Button asChild className="mt-6">
+          <Link href="/admin/login">Back to login</Link>
+        </Button>
+      </section>
     </main>
   );
 }

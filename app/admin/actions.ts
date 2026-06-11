@@ -23,10 +23,17 @@ function slugify(value: string) {
 }
 
 export async function loginAdmin(formData: FormData) {
-  const supabase = await createClient();
   const email = stringValue(formData, "email");
   const password = stringValue(formData, "password");
   const next = stringValue(formData, "next", "/admin");
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!url || !anonKey) {
+    redirect("/admin/login?error=Supabase environment variables are not configured yet");
+  }
+
+  const supabase = await createClient();
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
