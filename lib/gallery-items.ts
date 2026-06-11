@@ -13,14 +13,6 @@ export const galleryCategories: GalleryCategory[] = ["Chamber", "Equipment", "Ex
 
 export const galleryItems: GalleryItem[] = [
   {
-    src: "/images/khidmah-dental-chamber.jpg",
-    alt: "Khidmah Dental Surgery chamber interior",
-    title: "Treatment Chamber",
-    category: "Chamber",
-    width: 1536,
-    height: 1024,
-  },
-  {
     src: "/images/IMG_0905.JPG",
     alt: "Treatment room at Khidmah Dental Surgery",
     title: "Dental Equipment",

@@ -286,47 +286,43 @@ export default function Home() {
           </motion.div>
 
           <motion.div {...heroReveal} transition={{ duration: 0.75, ease: smoothEase, delay: 0.12 }}>
-            <div className="relative mx-auto max-w-[34rem] lg:pl-4">
+            <div className="relative lg:pl-4">
               <div className="absolute -inset-5 rounded-[2rem] bg-accent/35 blur-2xl" />
-              <div className="relative overflow-hidden rounded-lg border border-white bg-white p-3 shadow-soft">
+              <div className="relative overflow-hidden rounded-lg border border-white bg-white shadow-soft">
                 <Image
-                  src="/images/doctor-portrait.png"
-                  alt="Portrait of Dr. Md. Iqbal Hossain"
-                  width={1304}
-                  height={1694}
+                  src="/images/IMG_0905.JPG"
+                  alt="Treatment room at Khidmah Dental Surgery"
+                  width={4032}
+                  height={3024}
                   priority
-                  sizes="(min-width: 1024px) 42vw, 100vw"
-                  className="aspect-[4/5] h-full w-full rounded-md object-cover object-top"
+                  sizes="(min-width: 1024px) 48vw, 100vw"
+                  className="aspect-[4/3] h-full w-full object-cover"
                 />
-              </div>
-              <div className="absolute -right-2 bottom-28 hidden w-40 rounded-lg border border-white bg-white p-2 shadow-soft sm:block lg:-right-8 lg:w-52">
-                <Image
-                  src="/images/khidmah-dental-chamber.jpg"
-                  alt="Premium treatment chamber interior at Khidmah Dental Surgery"
-                  width={1536}
-                  height={1024}
-                  sizes="208px"
-                  className="aspect-[4/3] w-full rounded-md object-cover"
-                />
-                <p className="mt-2 text-center text-xs font-bold text-primary">Treatment chamber</p>
               </div>
               <motion.div
                 initial={{ opacity: 0, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.3, ease: smoothEase }}
-                className="relative mx-4 -mt-14 rounded-lg border border-border bg-white/94 p-5 shadow-soft backdrop-blur sm:mx-8 lg:absolute lg:-bottom-8 lg:left-0 lg:mx-0 lg:w-[88%]"
+                className="relative mx-4 -mt-16 rounded-lg border border-border bg-white/94 p-5 shadow-soft backdrop-blur sm:mx-8 lg:absolute lg:-bottom-8 lg:left-0 lg:mx-0 lg:w-[88%]"
               >
                 <div className="flex items-start gap-4">
-                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
-                    <ShieldCheck className="h-6 w-6" aria-hidden="true" />
+                  <span className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md bg-accent">
+                    <Image
+                      src="/images/doctor-portrait.png"
+                      alt="Dr. Md. Iqbal Hossain"
+                      width={1304}
+                      height={1694}
+                      sizes="64px"
+                      className="h-full w-full object-cover object-top"
+                    />
                   </span>
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                      Trusted Single-Doctor Care
+                      Meet Your Dentist
                     </p>
                     <h2 className="mt-1 text-xl font-bold">Dr. Md. Iqbal Hossain</h2>
                     <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                      BDS (DU), PGT Oral & Maxillofacial Surgery. Owner & Chief Consultant.
+                      Owner & Chief Consultant, Khidmah Dental Surgery, Beanibazar.
                     </p>
                   </div>
                 </div>

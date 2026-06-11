@@ -48,7 +48,7 @@ export async function generateMetadata({ params }: BlogDetailProps): Promise<Met
       card: "summary_large_image",
       title: post.metaTitle,
       description: post.metaDescription,
-      images: ["/images/khidmah-dental-chamber.jpg"],
+      images: ["/images/IMG_0905.JPG"],
     },
   };
 }
