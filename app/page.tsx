@@ -97,7 +97,7 @@ const services = [
   },
 ];
 
-const timeline = [
+const clinicalCredentials = [
   {
     label: "Degree",
     title: "BDS (DU)",
@@ -111,10 +111,10 @@ const timeline = [
     icon: Award,
   },
   {
-    label: "Hospital Experience",
-    title: "Dhaka Medical College Hospital",
-    text: "Former Honorary Medical Officer (HMO)",
-    icon: ShieldCheck,
+    label: "Registration",
+    title: "BMDC Registration",
+    text: "Registered dental practitioner under Bangladesh Medical & Dental Council",
+    icon: CheckCircle2,
   },
   {
     label: "Institution",
@@ -122,11 +122,38 @@ const timeline = [
     text: "Professional training and clinical exposure",
     icon: BadgeCheck,
   },
+];
+
+const professionalExperience = [
   {
-    label: "Registration",
-    title: "BMDC Registration",
-    text: "Registered dental practitioner under Bangladesh Medical & Dental Council",
-    icon: CheckCircle2,
+    label: "Current",
+    title: "Owner & Chief Consultant",
+    text: "Khidmah Dental Surgery",
+    icon: ShieldCheck,
+  },
+  {
+    label: "Former HMO",
+    title: "Honorary Medical Officer (HMO)",
+    text: "Dhaka Medical College Hospital",
+    icon: Award,
+  },
+  {
+    label: "Former",
+    title: "Dental Surgeon",
+    text: "Laser Dental Care",
+    icon: Stethoscope,
+  },
+  {
+    label: "Former",
+    title: "Dental Surgeon",
+    text: "Specialized Dental Care",
+    icon: Stethoscope,
+  },
+  {
+    label: "Former Intern",
+    title: "Intern Doctor",
+    text: "Pioneer Dental College & Hospital",
+    icon: GraduationCap,
   },
 ];
 
@@ -391,37 +418,19 @@ export default function Home() {
             </div>
           </motion.div>
 
-          <motion.div {...fadeUp} className="rounded-lg border border-border bg-background/70 p-4 shadow-soft sm:p-5">
-            <div className="mb-4 flex items-start justify-between gap-4 border-b border-border pb-4">
-              <div>
-                <p className="text-sm font-bold uppercase tracking-[0.2em] text-primary">Qualifications</p>
-                <h3 className="mt-2 text-xl font-bold tracking-normal sm:text-2xl">Clinical credentials & registration</h3>
-              </div>
-              <span className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground sm:flex">
-                <Award className="h-5 w-5" aria-hidden="true" />
-              </span>
-            </div>
-            <div className="grid gap-3">
-              {timeline.map((item, index) => (
-                <motion.div
-                  key={item.title}
-                  initial={{ opacity: 0, x: 14 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true, margin: "-80px" }}
-                  transition={{ duration: 0.45, delay: index * 0.035 }}
-                  className="grid grid-cols-[2.5rem_1fr] items-start gap-3 rounded-lg border border-border bg-white p-3 shadow-sm sm:grid-cols-[2.75rem_1fr] sm:p-4"
-                >
-                  <span className="flex h-10 w-10 items-center justify-center rounded-md bg-accent text-primary">
-                    <item.icon className="h-5 w-5" aria-hidden="true" />
-                  </span>
-                  <div>
-                    <p className="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-primary">{item.label}</p>
-                    <h3 className="mt-1 text-base font-bold leading-6">{item.title}</h3>
-                    <p className="mt-1 text-sm leading-6 text-muted-foreground">{item.text}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
+          <motion.div {...fadeUp} className="grid gap-5">
+            <ProfileList
+              eyebrow="Clinical Credentials"
+              title="Education, training & registration"
+              icon={Award}
+              items={clinicalCredentials}
+            />
+            <ProfileList
+              eyebrow="Professional Experience"
+              title="Clinical work history"
+              icon={Clock3}
+              items={professionalExperience}
+            />
           </motion.div>
         </div>
       </section>
@@ -616,6 +625,60 @@ function InfoRow({
     <div className="flex items-center gap-3 rounded-lg border border-border bg-background p-4">
       <Icon className="h-5 w-5 text-primary" aria-hidden="true" />
       <span className="font-semibold">{text}</span>
+    </div>
+  );
+}
+
+function ProfileList({
+  eyebrow,
+  title,
+  icon: Icon,
+  items,
+}: {
+  eyebrow: string;
+  title: string;
+  icon: LucideIcon;
+  items: {
+    label: string;
+    title: string;
+    text: string;
+    icon: LucideIcon;
+  }[];
+}) {
+  return (
+    <div className="rounded-lg border border-border bg-background/70 p-4 shadow-soft sm:p-5">
+      <div className="mb-4 flex items-start justify-between gap-4 border-b border-border pb-4">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">{eyebrow}</p>
+          <h3 className="mt-2 text-xl font-bold tracking-normal">{title}</h3>
+        </div>
+        <span className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground sm:flex">
+          <Icon className="h-5 w-5" aria-hidden="true" />
+        </span>
+      </div>
+      <div className="grid gap-2.5">
+        {items.map((item, index) => (
+          <motion.div
+            key={`${item.title}-${item.text}`}
+            initial={{ opacity: 0, x: 12 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.38, delay: index * 0.025 }}
+            className="grid grid-cols-[2.25rem_1fr] items-start gap-3 rounded-lg border border-border bg-white p-3 shadow-sm"
+          >
+            <span className="flex h-9 w-9 items-center justify-center rounded-md bg-accent text-primary">
+              <item.icon className="h-4 w-4" aria-hidden="true" />
+            </span>
+            <div>
+              <p className="text-[0.66rem] font-bold uppercase tracking-[0.15em] text-primary">
+                {item.label}
+              </p>
+              <h4 className="mt-0.5 text-sm font-bold leading-5 sm:text-base">{item.title}</h4>
+              <p className="mt-0.5 text-sm leading-5 text-muted-foreground">{item.text}</p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
     </div>
   );
 }
