@@ -55,7 +55,7 @@ export function GallerySection() {
             Real chamber moments
           </h2>
           <p className="mt-4 text-lg leading-8 text-muted-foreground">
-            Browse official Khidmah Dental Surgery photos by doctor, chamber, and equipment.
+            Browse official Khidmah Dental Surgery photos of the chamber, treatment room, reception, and location.
           </p>
         </div>
 
@@ -92,7 +92,7 @@ export function GallerySection() {
               onClick={() => setActiveItem(item)}
               className="group mb-4 block w-full break-inside-avoid overflow-hidden rounded-lg border border-border bg-white text-left shadow-sm transition hover:-translate-y-1 hover:shadow-soft"
             >
-              <div className="relative">
+              <div className="relative overflow-hidden">
                 <Image
                   src={item.src}
                   alt={item.alt}
@@ -102,12 +102,12 @@ export function GallerySection() {
                   className="h-auto w-full object-cover transition duration-500 group-hover:scale-[1.03]"
                   loading={index < 2 ? "eager" : "lazy"}
                 />
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-foreground/82 to-transparent p-4 pt-16 text-white">
-                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-white/72">
-                    {item.category}
-                  </p>
-                  <h3 className="mt-1 font-bold">{item.title}</h3>
-                </div>
+              </div>
+              <div className="border-t border-border bg-white p-4">
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
+                  {item.category}
+                </p>
+                <h3 className="mt-1 text-base font-bold">{item.title}</h3>
               </div>
             </motion.button>
           ))}

@@ -6,10 +6,12 @@ import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
+  Award,
   BadgeCheck,
   CalendarCheck,
   CheckCircle2,
   Clock3,
+  GraduationCap,
   Facebook,
   Mail,
   MapPin,
@@ -97,29 +99,34 @@ const services = [
 
 const timeline = [
   {
-    year: "01",
-    title: "Owner & Chief Consultant",
-    text: "Khidmah Dental Surgery, Beanibazar",
+    label: "Degree",
+    title: "BDS (DU)",
+    text: "Bachelor of Dental Surgery, University of Dhaka",
+    icon: GraduationCap,
   },
   {
-    year: "02",
-    title: "Former Honorary Medical Officer (HMO)",
-    text: "Dhaka Medical College Hospital",
+    label: "Advanced Training",
+    title: "PGT Oral & Maxillofacial Surgery",
+    text: "Post-graduate training focused on oral and maxillofacial surgical care",
+    icon: Award,
   },
   {
-    year: "03",
-    title: "Former Dental Surgeon",
-    text: "Laser Dental Care, Sylhet",
+    label: "Hospital Experience",
+    title: "Dhaka Medical College Hospital",
+    text: "Former Honorary Medical Officer (HMO)",
+    icon: ShieldCheck,
   },
   {
-    year: "04",
-    title: "Former Dental Surgeon",
-    text: "Specialized Dental Care, Sylhet",
+    label: "Institution",
+    title: "TMSS",
+    text: "Professional training and clinical exposure",
+    icon: BadgeCheck,
   },
   {
-    year: "05",
-    title: "Former Intern Doctor",
-    text: "Pioneer Dental College & Hospital",
+    label: "Registration",
+    title: "BMDC Registration",
+    text: "Registered dental practitioner under Bangladesh Medical & Dental Council",
+    icon: CheckCircle2,
   },
 ];
 
@@ -279,43 +286,47 @@ export default function Home() {
           </motion.div>
 
           <motion.div {...heroReveal} transition={{ duration: 0.75, ease: smoothEase, delay: 0.12 }}>
-            <div className="relative lg:pl-4">
+            <div className="relative mx-auto max-w-[34rem] lg:pl-4">
               <div className="absolute -inset-5 rounded-[2rem] bg-accent/35 blur-2xl" />
-              <div className="relative overflow-hidden rounded-lg border border-white bg-white shadow-soft">
+              <div className="relative overflow-hidden rounded-lg border border-white bg-white p-3 shadow-soft">
+                <Image
+                  src="/images/doctor-portrait.png"
+                  alt="Portrait of Dr. Md. Iqbal Hossain"
+                  width={1304}
+                  height={1694}
+                  priority
+                  sizes="(min-width: 1024px) 42vw, 100vw"
+                  className="aspect-[4/5] h-full w-full rounded-md object-cover object-top"
+                />
+              </div>
+              <div className="absolute -right-2 bottom-28 hidden w-40 rounded-lg border border-white bg-white p-2 shadow-soft sm:block lg:-right-8 lg:w-52">
                 <Image
                   src="/images/khidmah-dental-chamber.jpg"
-                  alt="Private dental chamber environment at Khidmah Dental Surgery"
+                  alt="Premium treatment chamber interior at Khidmah Dental Surgery"
                   width={1536}
                   height={1024}
-                  priority
-                  sizes="(min-width: 1024px) 48vw, 100vw"
-                  className="aspect-[4/3] h-full w-full object-cover"
+                  sizes="208px"
+                  className="aspect-[4/3] w-full rounded-md object-cover"
                 />
+                <p className="mt-2 text-center text-xs font-bold text-primary">Treatment chamber</p>
               </div>
               <motion.div
                 initial={{ opacity: 0, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.3, ease: smoothEase }}
-                className="relative mx-4 -mt-16 rounded-lg border border-border bg-white/94 p-5 shadow-soft backdrop-blur sm:mx-8 lg:absolute lg:-bottom-8 lg:left-0 lg:mx-0 lg:w-[88%]"
+                className="relative mx-4 -mt-14 rounded-lg border border-border bg-white/94 p-5 shadow-soft backdrop-blur sm:mx-8 lg:absolute lg:-bottom-8 lg:left-0 lg:mx-0 lg:w-[88%]"
               >
                 <div className="flex items-start gap-4">
-                  <span className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md bg-accent">
-                    <Image
-                      src="/images/doctor-portrait.png"
-                      alt="Dr. Md. Iqbal Hossain"
-                      width={1304}
-                      height={1694}
-                      sizes="64px"
-                      className="h-full w-full object-cover object-top"
-                    />
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
+                    <ShieldCheck className="h-6 w-6" aria-hidden="true" />
                   </span>
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                      Meet Your Dentist
+                      Trusted Single-Doctor Care
                     </p>
                     <h2 className="mt-1 text-xl font-bold">Dr. Md. Iqbal Hossain</h2>
                     <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                      Owner & Chief Consultant, Khidmah Dental Surgery, Beanibazar.
+                      BDS (DU), PGT Oral & Maxillofacial Surgery. Owner & Chief Consultant.
                     </p>
                   </div>
                 </div>
@@ -384,24 +395,38 @@ export default function Home() {
             </div>
           </motion.div>
 
-          <div className="grid gap-5">
-            {timeline.map((item, index) => (
-              <motion.div
-                key={item.title}
-                {...fadeUp}
-                transition={{ duration: 0.55, delay: index * 0.05 }}
-                className="grid grid-cols-[3.5rem_1fr] gap-5 rounded-lg border border-border bg-background/80 p-5"
-              >
-                <span className="flex h-12 w-12 items-center justify-center rounded-md bg-primary text-sm font-bold text-primary-foreground">
-                  {item.year}
-                </span>
-                <div>
-                  <h3 className="text-lg font-bold">{item.title}</h3>
-                  <p className="mt-2 leading-7 text-muted-foreground">{item.text}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+          <motion.div {...fadeUp} className="rounded-lg border border-border bg-background/70 p-4 shadow-soft sm:p-5">
+            <div className="mb-4 flex items-start justify-between gap-4 border-b border-border pb-4">
+              <div>
+                <p className="text-sm font-bold uppercase tracking-[0.2em] text-primary">Qualifications</p>
+                <h3 className="mt-2 text-xl font-bold tracking-normal sm:text-2xl">Clinical credentials & registration</h3>
+              </div>
+              <span className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground sm:flex">
+                <Award className="h-5 w-5" aria-hidden="true" />
+              </span>
+            </div>
+            <div className="grid gap-3">
+              {timeline.map((item, index) => (
+                <motion.div
+                  key={item.title}
+                  initial={{ opacity: 0, x: 14 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, margin: "-80px" }}
+                  transition={{ duration: 0.45, delay: index * 0.035 }}
+                  className="grid grid-cols-[2.5rem_1fr] items-start gap-3 rounded-lg border border-border bg-white p-3 shadow-sm sm:grid-cols-[2.75rem_1fr] sm:p-4"
+                >
+                  <span className="flex h-10 w-10 items-center justify-center rounded-md bg-accent text-primary">
+                    <item.icon className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <div>
+                    <p className="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-primary">{item.label}</p>
+                    <h3 className="mt-1 text-base font-bold leading-6">{item.title}</h3>
+                    <p className="mt-1 text-sm leading-6 text-muted-foreground">{item.text}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
         </div>
       </section>
 
@@ -513,6 +538,14 @@ export default function Home() {
             </div>
           </motion.div>
           <motion.div {...fadeUp} className="grid gap-5">
+            <div className="map-frame overflow-hidden rounded-lg border border-border bg-white shadow-soft [&_iframe]:min-h-[420px] sm:[&_iframe]:min-h-[460px]">
+              <iframe
+                title="Khidmah Dental Surgery map"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                src="https://www.google.com/maps?q=Khidmah%20Dental%20Surgery%20Nimar%20Ali%20Mansion%202nd%20Floor%20Nimtola%20Beanibazar%20Sylhet%203170&z=18&output=embed"
+              />
+            </div>
             <div className="overflow-hidden rounded-lg border border-border bg-white shadow-soft">
               <Image
                 src="/images/IMG_3955.JPG"
@@ -520,17 +553,9 @@ export default function Home() {
                 width={4032}
                 height={3024}
                 sizes="(min-width: 1024px) 52vw, 100vw"
-                className="aspect-[4/3] w-full object-cover"
+                className="aspect-[16/9] w-full object-cover"
                 loading="lazy"
               />
-            </div>
-            <div className="map-frame overflow-hidden rounded-lg border border-border bg-white shadow-soft">
-            <iframe
-              title="Khidmah Dental Surgery map"
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              src="https://www.google.com/maps?q=Khidmah%20Dental%20Surgery%20Nimar%20Ali%20Mansion%202nd%20Floor%20Nimtola%20Beanibazar%20Sylhet%203170&z=18&output=embed"
-            />
             </div>
           </motion.div>
         </div>
