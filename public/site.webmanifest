@@ -1,0 +1,16 @@
+{
+  "name": "Khidmah Dental Surgery",
+  "short_name": "Khidmah Dental",
+  "description": "Personal dental chamber of Dr. Md. Iqbal Hossain in Beanibazar, Sylhet.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8f6f0",
+  "theme_color": "#1f5f5f",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "64x64",
+      "type": "image/svg+xml"
+    }
+  ]
+}

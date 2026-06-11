@@ -1,0 +1,16 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="900" fill="#eef3f1"/>
+  <rect x="120" y="120" width="960" height="660" rx="34" fill="#ffffff"/>
+  <path d="M270 438c86-78 172-117 258-117s172 39 258 117c-86 78-172 117-258 117s-172-39-258-117Z" fill="#f2dfce"/>
+  <path d="M320 435c54-42 108-63 162-63h92c54 0 108 21 162 63-54 44-108 66-162 66h-92c-54 0-108-22-162-66Z" fill="#8b4b48"/>
+  <g fill="#f4efe5" stroke="#d9cbb8" stroke-width="4">
+    <rect x="380" y="373" width="54" height="92" rx="16"/>
+    <rect x="442" y="365" width="58" height="106" rx="16"/>
+    <rect x="508" y="360" width="58" height="112" rx="16"/>
+    <rect x="574" y="365" width="58" height="106" rx="16"/>
+    <rect x="640" y="373" width="54" height="92" rx="16"/>
+  </g>
+  <path d="M386 472c95 34 189 34 284 0" stroke="#c8b59a" stroke-width="12" stroke-linecap="round"/>
+  <text x="600" y="690" text-anchor="middle" font-family="Arial, sans-serif" font-size="42" font-weight="700" fill="#1f5f5f">Before Treatment</text>
+  <text x="600" y="740" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="#64706f">Placeholder clinical image</text>
+</svg>
