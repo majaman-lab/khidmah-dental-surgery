@@ -562,11 +562,22 @@ function EditableListPanel({
 
 function DeleteButton({ table, id, tab }: { table: string; id: string; tab: string }) {
   return (
-    <form action={deleteRow}>
+    <form
+      action={async () => {
+        "use server";
+        throw new Error("DELETE BUTTON WORKS");
+      }}
+    >
       <input type="hidden" name="table" value={table} />
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="tab" value={tab} />
-      <Button type="submit" variant="outline">Delete</Button>
+
+      <button
+        type="submit"
+        className="inline-flex h-11 items-center justify-center rounded-md border px-5"
+      >
+        Delete
+      </button>
     </form>
   );
 }
