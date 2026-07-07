@@ -24,11 +24,13 @@ function slugify(value: string) {
 
 function revalidateSiteContent() {
   revalidatePath("/");
+  revalidatePath("/admin");
   revalidatePath("/api/site-content");
 }
 
 function revalidateGalleryContent() {
   revalidatePath("/");
+  revalidatePath("/admin");
   revalidatePath("/api/gallery");
 }
 

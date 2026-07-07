@@ -506,54 +506,58 @@ function EditableListPanel({
     <Panel title={title} description="Add, edit, delete, and reorder records. Lower sort numbers appear first.">
       <div className="grid gap-4">
         {[{}, ...items].map((item, index) => (
-          <form key={item.id || "new"} action={action} className="grid gap-3 rounded-lg border border-border bg-background p-4">
-            <input type="hidden" name="id" defaultValue={item.id || ""} />
-            <div className="grid gap-3 sm:grid-cols-2">
-              {fields.map((field) =>
-                field === "content" || field === "description" || field === "excerpt" || field === "answer" ? (
-                  <Textarea key={field} name={field} label={labelize(field)} defaultValue={item[field] || ""} />
-                ) : field === "is_active" ? (
-                  <label key={field} className="flex items-center gap-2 text-sm font-bold">
-                    <input type="checkbox" name={field} defaultChecked={item[field] ?? true} />
-                    Active
-                  </label>
-                ) : field === "status" ? (
-                  <label key={field} className="grid gap-2">
-                    <span className="text-sm font-bold">Status</span>
-                    <select name="status" defaultValue={item.status || "Draft"} className="h-11 rounded-md border border-border bg-white px-3 text-sm">
-                      <option value="Draft">Draft</option>
-                      <option value="Published">Published</option>
-                    </select>
-                  </label>
-                ) : field === "category" && table === "gallery_images" ? (
-                  <label key={field} className="grid gap-2">
-                    <span className="text-sm font-bold">Category</span>
-                    <select name="category" defaultValue={item.category || "Chamber"} className="h-11 rounded-md border border-border bg-white px-3 text-sm">
-                      <option value="Chamber">Chamber</option>
-                      <option value="Equipment">Equipment</option>
-                      <option value="Exterior">Exterior</option>
-                    </select>
-                  </label>
-                ) : field === "featured_image" && media?.length ? (
-                  <label key={field} className="grid gap-2">
-                    <span className="text-sm font-bold">Featured image</span>
-                    <select name={field} defaultValue={item[field] || ""} className="h-11 rounded-md border border-border bg-white px-3 text-sm">
-                      <option value="">No image</option>
-                      {media.map((asset) => (
-                        <option key={asset.id} value={asset.url}>{asset.filename}</option>
-                      ))}
-                    </select>
-                  </label>
-                ) : (
-                  <Field key={field} name={field} label={labelize(field)} defaultValue={item[field] ?? (field === "sort_order" ? index : "")} />
-                ),
-              )}
-            </div>
+          <div key={item.id || "new"} className="grid gap-3 rounded-lg border border-border bg-background p-4">
+            <form action={action} className="grid gap-3">
+              <input type="hidden" name="id" defaultValue={item.id || ""} />
+              <div className="grid gap-3 sm:grid-cols-2">
+                {fields.map((field) =>
+                  field === "content" || field === "description" || field === "excerpt" || field === "answer" ? (
+                    <Textarea key={field} name={field} label={labelize(field)} defaultValue={item[field] || ""} />
+                  ) : field === "is_active" ? (
+                    <label key={field} className="flex items-center gap-2 text-sm font-bold">
+                      <input type="checkbox" name={field} defaultChecked={item[field] ?? true} />
+                      Active
+                    </label>
+                  ) : field === "status" ? (
+                    <label key={field} className="grid gap-2">
+                      <span className="text-sm font-bold">Status</span>
+                      <select name="status" defaultValue={item.status || "Draft"} className="h-11 rounded-md border border-border bg-white px-3 text-sm">
+                        <option value="Draft">Draft</option>
+                        <option value="Published">Published</option>
+                      </select>
+                    </label>
+                  ) : field === "category" && table === "gallery_images" ? (
+                    <label key={field} className="grid gap-2">
+                      <span className="text-sm font-bold">Category</span>
+                      <select name="category" defaultValue={item.category || "Chamber"} className="h-11 rounded-md border border-border bg-white px-3 text-sm">
+                        <option value="Chamber">Chamber</option>
+                        <option value="Equipment">Equipment</option>
+                        <option value="Exterior">Exterior</option>
+                      </select>
+                    </label>
+                  ) : field === "featured_image" && media?.length ? (
+                    <label key={field} className="grid gap-2">
+                      <span className="text-sm font-bold">Featured image</span>
+                      <select name={field} defaultValue={item[field] || ""} className="h-11 rounded-md border border-border bg-white px-3 text-sm">
+                        <option value="">No image</option>
+                        {media.map((asset) => (
+                          <option key={asset.id} value={asset.url}>{asset.filename}</option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : (
+                    <Field key={field} name={field} label={labelize(field)} defaultValue={item[field] ?? (field === "sort_order" ? index : "")} />
+                  ),
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button type="submit">{item.id ? "Save" : "Add new"}</Button>
+              </div>
+            </form>
             <div className="flex flex-wrap gap-2">
-              <Button type="submit">{item.id ? "Save" : "Add new"}</Button>
               {item.id ? <DeleteButton table={table} id={item.id} tab={tab} /> : null}
             </div>
-          </form>
+          </div>
         ))}
       </div>
     </Panel>
@@ -562,19 +566,13 @@ function EditableListPanel({
 
 function DeleteButton({ table, id, tab }: { table: string; id: string; tab: string }) {
   return (
-    <form
-      action={async () => {
-        "use server";
-        throw new Error("DELETE BUTTON WORKS");
-      }}
-    >
+    <form action={deleteRow}>
       <input type="hidden" name="table" value={table} />
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="tab" value={tab} />
-
       <button
         type="submit"
-        className="inline-flex h-11 items-center justify-center rounded-md border px-5"
+        className="inline-flex h-11 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-border bg-background px-5 text-sm font-semibold transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         Delete
       </button>
