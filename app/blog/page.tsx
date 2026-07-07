@@ -5,6 +5,8 @@ import { ArrowRight, BookOpen, CalendarCheck } from "lucide-react";
 import { BlogListing } from "@/components/blog-listing";
 import { getPublicBlogPosts } from "@/lib/cms-blog";
 
+export const revalidate = 300;
+
 export const metadata: Metadata = {
   title: "Dental Blog | Khidmah Dental Surgery",
   description:
@@ -18,6 +20,7 @@ export const metadata: Metadata = {
       "Dental tips and treatment guides from Khidmah Dental Surgery in Beanibazar, Sylhet.",
     url: "/blog",
     type: "website",
+    images: ["/images/IMG_0905.JPG"],
   },
   twitter: {
     card: "summary_large_image",
@@ -40,7 +43,7 @@ export default async function BlogPage() {
   };
 
   return (
-    <main className="min-h-screen overflow-hidden">
+    <main id="main-content" className="min-h-screen overflow-hidden">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}

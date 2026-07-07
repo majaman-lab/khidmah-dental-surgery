@@ -45,6 +45,7 @@ const navItems = [
   ["Doctor", "#doctor"],
   ["Why Choose", "#why-choose"],
   ["Gallery", "#gallery"],
+  ["Blog", "/blog"],
   ["FAQ", "#faq"],
   ["Contact", "#contact"],
 ];
@@ -248,6 +249,15 @@ type CmsContent = {
   }>;
 };
 
+type LatestArticle = {
+  slug: string;
+  title: string;
+  excerpt: string;
+  category: string;
+  featuredImage: string;
+  publishedAt: string;
+};
+
 const iconMap: Record<string, LucideIcon> = {
   Award,
   BadgeCheck,
@@ -299,6 +309,7 @@ function experienceIcon(label: string, title: string, text: string) {
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [cmsContent, setCmsContent] = useState<CmsContent | null>(null);
+  const [latestArticles, setLatestArticles] = useState<LatestArticle[]>([]);
 
   useEffect(() => {
     let mounted = true;
@@ -308,6 +319,23 @@ export default function Home() {
       .then((data: CmsContent & { configured?: boolean }) => {
         if (mounted && data.configured !== false) {
           setCmsContent(data);
+        }
+      })
+      .catch(() => undefined);
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    fetch("/api/blog")
+      .then((response) => response.json())
+      .then((data: { posts?: LatestArticle[] }) => {
+        if (mounted) {
+          setLatestArticles(data.posts || []);
         }
       })
       .catch(() => undefined);
@@ -660,6 +688,64 @@ export default function Home() {
       </section>
 
       <GallerySection />
+
+      {latestArticles.length ? (
+        <section className="content-section bg-white py-24 sm:py-32">
+          <div className="section-shell">
+            <motion.div {...fadeUp} className="max-w-2xl">
+              <p className="text-sm font-bold uppercase tracking-[0.2em] text-primary">Latest Articles</p>
+              <h2 className="mt-3 text-3xl font-bold tracking-normal sm:text-4xl">
+                Dental guidance from Khidmah Dental Surgery
+              </h2>
+              <p className="mt-4 text-lg leading-8 text-muted-foreground">
+                Read practical treatment guides and oral health advice for patients in Beanibazar.
+              </p>
+            </motion.div>
+            <div className="mt-10 grid gap-5 md:grid-cols-3">
+              {latestArticles.map((post, index) => (
+                <motion.article
+                  key={post.slug}
+                  {...fadeUp}
+                  transition={{ duration: 0.55, delay: index * 0.04 }}
+                  className="overflow-hidden rounded-lg border border-border bg-background shadow-sm"
+                >
+                  <div className="relative aspect-[4/3] bg-accent">
+                    <Image
+                      src={post.featuredImage}
+                      alt={post.title}
+                      fill
+                      sizes="(min-width: 768px) 31vw, 100vw"
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="p-5">
+                    <span className="rounded-md bg-accent px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-primary">
+                      {post.category}
+                    </span>
+                    <h3 className="mt-4 text-xl font-bold leading-tight">{post.title}</h3>
+                    <p className="mt-3 text-sm leading-6 text-muted-foreground">{post.excerpt}</p>
+                    <Link
+                      href={`/blog/${post.slug}`}
+                      className="mt-5 inline-flex items-center gap-2 text-sm font-bold text-primary"
+                    >
+                      Read More
+                      <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                    </Link>
+                  </div>
+                </motion.article>
+              ))}
+            </div>
+            <div className="mt-8">
+              <Button variant="outline" asChild>
+                <Link href="/blog">
+                  View all articles
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       <section id="faq" className="content-section bg-white py-24 sm:py-32">
         <div className="section-shell grid gap-12 lg:grid-cols-[0.8fr_1.2fr]">

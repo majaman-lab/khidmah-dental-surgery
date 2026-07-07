@@ -10,11 +10,13 @@ export type BlogPost = {
   title: string;
   excerpt: string;
   category: BlogCategory;
+  featuredImage: string;
   publishedAt: string;
   readTime: string;
   metaTitle: string;
   metaDescription: string;
   intro: string;
+  content: string;
   sections: Array<{
     heading: string;
     body: string;
@@ -36,6 +38,7 @@ export const blogPosts: BlogPost[] = [
     excerpt:
       "Common signs that a painful or infected tooth may need root canal treatment and why early consultation matters.",
     category: "Root Canal",
+    featuredImage: "/images/IMG_0905.JPG",
     publishedAt: "2026-06-11",
     readTime: "4 min read",
     metaTitle: "When Do You Need Root Canal Treatment? | Khidmah Dental Surgery",
@@ -43,6 +46,8 @@ export const blogPosts: BlogPost[] = [
       "Learn common signs that may require root canal treatment from Khidmah Dental Surgery, Beanibazar.",
     intro:
       "Root canal treatment can help save a natural tooth when the inner pulp becomes infected or inflamed. A timely consultation helps reduce pain and avoid further complications.",
+    content:
+      "Root canal treatment can help save a natural tooth when the inner pulp becomes infected or inflamed. A timely consultation helps reduce pain and avoid further complications.\n\n## Warning signs to notice\nLingering tooth pain, sensitivity to hot or cold, swelling, gum tenderness, or pain while chewing can indicate a deeper tooth problem. These symptoms should be checked by a dentist before they worsen.\n\n## Why early care helps\nEarly diagnosis gives the doctor more options to preserve natural tooth structure. Waiting too long may increase infection risk or make treatment more complex.\n\n## What happens at consultation\nDr. Md. Iqbal Hossain examines the tooth, discusses symptoms, and explains whether root canal treatment or another option is suitable.",
     sections: [
       {
         heading: "Warning signs to notice",
@@ -64,6 +69,7 @@ export const blogPosts: BlogPost[] = [
     excerpt:
       "How professional cleaning supports gum health, reduces tartar, and keeps your smile feeling fresh.",
     category: "Scaling",
+    featuredImage: "/images/IMG_3849.JPG",
     publishedAt: "2026-06-11",
     readTime: "3 min read",
     metaTitle: "Scaling & Polishing for Healthier Gums | Khidmah Dental Surgery",
@@ -71,6 +77,8 @@ export const blogPosts: BlogPost[] = [
       "Understand how scaling and polishing help gum health, tartar control, and fresher breath in Beanibazar.",
     intro:
       "Scaling and polishing removes tartar and surface deposits that daily brushing cannot fully clear. It is one of the simplest ways to support long-term gum health.",
+    content:
+      "Scaling and polishing removes tartar and surface deposits that daily brushing cannot fully clear. It is one of the simplest ways to support long-term gum health.\n\n## What scaling removes\nScaling removes hardened plaque, known as tartar, from tooth surfaces and around the gumline. This helps reduce irritation and supports cleaner gums.\n\n## What polishing does\nPolishing smooths tooth surfaces and can reduce some external stains. It leaves the mouth feeling cleaner and fresher.\n\n## How often should you visit\nMany patients benefit from routine cleaning every six months, but the right schedule depends on your gum condition and tartar buildup.",
     sections: [
       {
         heading: "What scaling removes",
@@ -92,6 +100,7 @@ export const blogPosts: BlogPost[] = [
     excerpt:
       "A simple guide to tooth-colored fillings for chips, small gaps, decay, and visible smile-area repair.",
     category: "Cosmetic Dentistry",
+    featuredImage: "/images/IMG_3847.JPG",
     publishedAt: "2026-06-11",
     readTime: "4 min read",
     metaTitle: "Cosmetic Filling for Front Teeth | Khidmah Dental Surgery",
@@ -99,6 +108,8 @@ export const blogPosts: BlogPost[] = [
       "Learn how cosmetic tooth-colored filling can repair chips, decay, and smile-area concerns at Khidmah Dental Surgery.",
     intro:
       "Cosmetic fillings are designed to restore tooth structure while blending with your natural tooth shade. They are often used in visible smile areas.",
+    content:
+      "Cosmetic fillings are designed to restore tooth structure while blending with your natural tooth shade. They are often used in visible smile areas.\n\n## When cosmetic filling helps\nSmall chips, cavities, worn edges, and minor visible defects can often be improved with tooth-colored filling material after a clinical check.\n\n## Appearance and shade\nThe dentist selects a shade that aims to match the surrounding tooth color so the restoration looks natural in everyday conversation.\n\n## Care after treatment\nGood brushing, avoiding hard biting on the restored edge, and routine dental review can help maintain the filling.",
     sections: [
       {
         heading: "When cosmetic filling helps",
@@ -120,6 +131,7 @@ export const blogPosts: BlogPost[] = [
     excerpt:
       "What happens during a braces consultation for crowding, spacing, bite concerns, and smile planning.",
     category: "Braces",
+    featuredImage: "/images/IMG_3569.JPG",
     publishedAt: "2026-06-11",
     readTime: "4 min read",
     metaTitle: "Braces Consultation: What to Expect | Khidmah Dental Surgery",
@@ -127,6 +139,8 @@ export const blogPosts: BlogPost[] = [
       "Understand what to expect during a braces consultation in Beanibazar at Khidmah Dental Surgery.",
     intro:
       "A braces consultation helps identify whether alignment, spacing, crowding, or bite concerns need orthodontic planning.",
+    content:
+      "A braces consultation helps identify whether alignment, spacing, crowding, or bite concerns need orthodontic planning.\n\n## The first assessment\nThe dentist checks tooth position, bite relationship, spacing, crowding, and your main smile concerns.\n\n## Treatment planning\nDepending on the case, further records or specialist planning may be recommended before beginning orthodontic treatment.\n\n## Adults can ask too\nBraces and alignment consultations are not only for children. Adults can also discuss smile and bite improvement options.",
     sections: [
       {
         heading: "The first assessment",
@@ -148,6 +162,7 @@ export const blogPosts: BlogPost[] = [
     excerpt:
       "Practical home-care habits for healthier teeth, fresher breath, and fewer urgent dental visits.",
     category: "Dental Tips",
+    featuredImage: "/images/IMG_3955.JPG",
     publishedAt: "2026-06-11",
     readTime: "3 min read",
     metaTitle: "Daily Dental Tips for Families | Khidmah Dental Surgery",
@@ -155,6 +170,8 @@ export const blogPosts: BlogPost[] = [
       "Simple daily dental care tips from Khidmah Dental Surgery for families in Beanibazar and Sylhet.",
     intro:
       "Good dental habits at home can prevent many common problems. Small daily steps often make the biggest long-term difference.",
+    content:
+      "Good dental habits at home can prevent many common problems. Small daily steps often make the biggest long-term difference.\n\n## Brush with attention\nBrush twice daily for around two minutes, especially before sleeping. Focus on the gumline and back teeth, not only the front smile area.\n\n## Control sweet snacks\nFrequent sugary snacks and drinks increase cavity risk. Try to keep sweets with meals rather than many times throughout the day.\n\n## Do not ignore pain\nDental pain usually has a cause. Early consultation can make treatment simpler and more comfortable.",
     sections: [
       {
         heading: "Brush with attention",

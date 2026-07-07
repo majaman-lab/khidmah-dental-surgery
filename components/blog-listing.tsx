@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
-import { ArrowRight, Search } from "lucide-react";
+import { ArrowRight, CalendarCheck, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { blogCategories, type BlogCategory, type BlogPost } from "@/lib/blog-posts";
@@ -11,6 +12,14 @@ import { cn } from "@/lib/utils";
 const allCategory = "All";
 type ActiveCategory = typeof allCategory | BlogCategory;
 const categoryOptions: ActiveCategory[] = [allCategory, ...blogCategories];
+
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat("en", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date(value));
+}
 
 export function BlogListing({ posts }: { posts: BlogPost[] }) {
   const [activeCategory, setActiveCategory] = useState<ActiveCategory>(allCategory);
@@ -72,25 +81,39 @@ export function BlogListing({ posts }: { posts: BlogPost[] }) {
             initial={{ opacity: 0, y: 22 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45, delay: index * 0.03, ease: [0.22, 1, 0.36, 1] }}
-            className="flex min-h-72 flex-col justify-between rounded-lg border border-border bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-soft"
+            className="flex min-h-72 flex-col overflow-hidden rounded-lg border border-border bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-soft"
           >
-            <div>
+            <div className="relative aspect-[4/3] overflow-hidden bg-accent">
+              <Image
+                src={post.featuredImage}
+                alt={post.title}
+                fill
+                sizes="(min-width: 1024px) 31vw, (min-width: 768px) 46vw, 100vw"
+                className="object-cover"
+              />
+            </div>
+            <div className="flex flex-1 flex-col justify-between p-6">
+              <div>
               <div className="flex flex-wrap items-center gap-3">
                 <span className="rounded-md bg-accent px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-primary">
                   {post.category}
                 </span>
-                <span className="text-sm font-semibold text-muted-foreground">{post.readTime}</span>
+                <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground">
+                  <CalendarCheck className="h-4 w-4" aria-hidden="true" />
+                  {formatDate(post.publishedAt)}
+                </span>
               </div>
               <h2 className="mt-5 text-xl font-bold leading-tight">{post.title}</h2>
               <p className="mt-4 leading-7 text-muted-foreground">{post.excerpt}</p>
+              </div>
+              <Link
+                href={`/blog/${post.slug}`}
+                className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-primary"
+              >
+                Read More
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
             </div>
-            <Link
-              href={`/blog/${post.slug}`}
-              className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-primary"
-            >
-              Read article
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </Link>
           </motion.article>
         ))}
       </motion.div>

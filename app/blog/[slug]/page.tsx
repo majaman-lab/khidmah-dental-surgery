@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight, CalendarCheck, MessageCircle, Phone } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { blogPosts } from "@/lib/blog-posts";
-import { getPublicBlogPost, getPublicBlogPosts } from "@/lib/cms-blog";
+import { getPublicBlogPost, getPublicBlogPosts, getRelatedBlogPosts } from "@/lib/cms-blog";
 
 type BlogDetailProps = {
   params: Promise<{
@@ -18,8 +18,20 @@ const telHref = `tel:${phoneNumber}`;
 const whatsappUrl =
   "https://wa.me/8801727529609?text=I%20want%20to%20book%20a%20dental%20consultation%20at%20Khidmah%20Dental%20Surgery";
 
-export function generateStaticParams() {
-  return blogPosts.map((post) => ({
+export const revalidate = 300;
+
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat("en", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date(value));
+}
+
+export async function generateStaticParams() {
+  const posts = await getPublicBlogPosts();
+
+  return posts.map((post) => ({
     slug: post.slug,
   }));
 }
@@ -44,33 +56,36 @@ export async function generateMetadata({ params }: BlogDetailProps): Promise<Met
       url: `/blog/${post.slug}`,
       type: "article",
       publishedTime: post.publishedAt,
+      images: [post.featuredImage],
     },
     twitter: {
       card: "summary_large_image",
       title: post.metaTitle,
       description: post.metaDescription,
-      images: ["/images/IMG_0905.JPG"],
+      images: [post.featuredImage],
     },
   };
 }
 
 export default async function BlogDetailPage({ params }: BlogDetailProps) {
   const { slug } = await params;
-  const [post, posts] = await Promise.all([getPublicBlogPost(slug), getPublicBlogPosts()]);
+  const post = await getPublicBlogPost(slug);
 
   if (!post) {
     notFound();
   }
 
-  const relatedPosts = posts
-    .filter((item) => item.slug !== post.slug && item.category === post.category)
-    .concat(posts.filter((item) => item.slug !== post.slug && item.category !== post.category))
-    .slice(0, 3);
+  const relatedPosts = await getRelatedBlogPosts(post, 3);
+  const articleUrl = `https://khidmahdentalsurgery.com/blog/${post.slug}`;
+  const articleImage = post.featuredImage.startsWith("http")
+    ? post.featuredImage
+    : `https://khidmahdentalsurgery.com${post.featuredImage}`;
   const schema = {
     "@context": "https://schema.org",
-    "@type": "BlogPosting",
+    "@type": "Article",
     headline: post.title,
     description: post.metaDescription,
+    image: articleImage,
     datePublished: post.publishedAt,
     dateModified: post.publishedAt,
     author: {
@@ -85,11 +100,11 @@ export default async function BlogDetailPage({ params }: BlogDetailProps) {
         url: "https://khidmahdentalsurgery.com/logo.svg",
       },
     },
-    mainEntityOfPage: `https://khidmahdentalsurgery.com/blog/${post.slug}`,
+    mainEntityOfPage: articleUrl,
   };
 
   return (
-    <main className="min-h-screen overflow-hidden">
+    <main id="main-content" className="min-h-screen overflow-hidden">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
@@ -111,7 +126,10 @@ export default async function BlogDetailPage({ params }: BlogDetailProps) {
               <span className="rounded-md bg-accent px-3 py-1 text-xs font-bold uppercase tracking-[0.16em] text-primary">
                 {post.category}
               </span>
-              <span className="text-sm font-semibold text-muted-foreground">{post.readTime}</span>
+              <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-muted-foreground">
+                <CalendarCheck className="h-4 w-4" aria-hidden="true" />
+                {formatDate(post.publishedAt)}
+              </span>
             </div>
             <h1 className="mt-6 text-4xl font-bold leading-[1.08] tracking-normal text-foreground sm:text-5xl">
               {post.title}
@@ -119,6 +137,19 @@ export default async function BlogDetailPage({ params }: BlogDetailProps) {
             <p className="mt-5 text-lg leading-8 text-muted-foreground">{post.intro}</p>
           </div>
         </header>
+
+        <section className="section-shell pb-16">
+          <div className="relative aspect-[16/9] overflow-hidden rounded-lg border border-border bg-accent shadow-soft">
+            <Image
+              src={post.featuredImage}
+              alt={post.title}
+              fill
+              priority
+              sizes="(min-width: 1024px) 1120px, 100vw"
+              className="object-cover"
+            />
+          </div>
+        </section>
 
         <section className="bg-white py-16">
           <div className="section-shell grid gap-10 lg:grid-cols-[0.72fr_1fr]">
@@ -151,7 +182,13 @@ export default async function BlogDetailPage({ params }: BlogDetailProps) {
               {post.sections.map((section) => (
                 <section key={section.heading} className="rounded-lg border border-border bg-background p-6">
                   <h2 className="text-2xl font-bold tracking-normal">{section.heading}</h2>
-                  <p className="mt-4 leading-8 text-muted-foreground">{section.body}</p>
+                  <div className="mt-4 grid gap-4">
+                    {section.body.split(/\n{2,}/).map((paragraph, index) => (
+                      <p key={`${section.heading}-${index}`} className="leading-8 text-muted-foreground">
+                        {paragraph}
+                      </p>
+                    ))}
+                  </div>
                 </section>
               ))}
             </div>
@@ -166,13 +203,24 @@ export default async function BlogDetailPage({ params }: BlogDetailProps) {
             <Link
               key={related.slug}
               href={`/blog/${related.slug}`}
-              className="rounded-lg border border-border bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-soft"
+              className="overflow-hidden rounded-lg border border-border bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-soft"
             >
-              <span className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
-                {related.category}
-              </span>
-              <h3 className="mt-3 font-bold">{related.title}</h3>
-              <p className="mt-3 text-sm leading-6 text-muted-foreground">{related.excerpt}</p>
+              <div className="relative aspect-[4/3] bg-accent">
+                <Image
+                  src={related.featuredImage}
+                  alt={related.title}
+                  fill
+                  sizes="(min-width: 768px) 31vw, 100vw"
+                  className="object-cover"
+                />
+              </div>
+              <div className="p-5">
+                <span className="text-xs font-bold uppercase tracking-[0.16em] text-primary">
+                  {related.category}
+                </span>
+                <h3 className="mt-3 font-bold">{related.title}</h3>
+                <p className="mt-3 text-sm leading-6 text-muted-foreground">{related.excerpt}</p>
+              </div>
             </Link>
           ))}
         </div>
