@@ -55,12 +55,18 @@ const tabs = [
   ["account", "Account", ShieldCheck],
 ] as const;
 
+type AdminTab = (typeof tabs)[number][0];
+
 type AdminSearchParams = {
   tab?: string;
   success?: string;
   error?: string;
   q?: string;
 };
+
+function isAdminTab(tab: string | undefined): tab is AdminTab {
+  return tabs.some(([id]) => id === tab);
+}
 
 export default async function AdminPage({
   searchParams,
@@ -81,49 +87,103 @@ export default async function AdminPage({
   }
 
   const params = await searchParams;
-  const activeTab = params.tab || "dashboard";
+  const activeTab = isAdminTab(params.tab) ? params.tab : "dashboard";
   const { supabase, user } = await requireAdmin();
 
-  const [
-    appointmentsResult,
-    blogsResult,
-    galleryResult,
-    sectionsResult,
-    contactResult,
-    doctorResult,
-    credentialsResult,
-    experienceResult,
-    servicesResult,
-    faqsResult,
-    seoResult,
-    mediaResult,
-  ] = await Promise.all([
-    supabase.from("appointments").select("*").order("created_at", { ascending: false }),
-    supabase.from("blog_posts").select("*").order("updated_at", { ascending: false }),
-    supabase.from("gallery_images").select("*").order("sort_order", { ascending: true }),
-    supabase.from("homepage_sections").select("*").order("sort_order", { ascending: true }),
-    supabase.from("site_settings").select("*").eq("key", "contact").maybeSingle(),
-    supabase.from("doctor_profile").select("*").eq("id", 1).maybeSingle(),
-    supabase.from("doctor_credentials").select("*").order("sort_order", { ascending: true }),
-    supabase.from("doctor_experiences").select("*").order("sort_order", { ascending: true }),
-    supabase.from("services").select("*").order("sort_order", { ascending: true }),
-    supabase.from("faqs").select("*").order("sort_order", { ascending: true }),
-    supabase.from("seo_settings").select("*").eq("id", 1).maybeSingle(),
-    supabase.from("media_assets").select("*").order("created_at", { ascending: false }),
-  ]);
+  let appointments: any[] = [];
+  let appointmentCount = 0;
+  let blogPostCount = 0;
+  let galleryImageCount = 0;
+  let blogPosts: any[] = [];
+  let galleryImages: any[] = [];
+  let homepageSections: any[] = [];
+  let contact: Record<string, string> = {};
+  let doctor: any = null;
+  let credentials: any[] = [];
+  let experiences: any[] = [];
+  let services: any[] = [];
+  let faqs: any[] = [];
+  let seo: any = null;
+  let media: any[] = [];
 
-  const appointments = appointmentsResult.data || [];
-  const blogPosts = blogsResult.data || [];
-  const galleryImages = galleryResult.data || [];
-  const homepageSections = sectionsResult.data || [];
-  const contact = (contactResult.data?.value || {}) as Record<string, string>;
-  const doctor = doctorResult.data;
-  const credentials = credentialsResult.data || [];
-  const experiences = experienceResult.data || [];
-  const services = servicesResult.data || [];
-  const faqs = faqsResult.data || [];
-  const seo = seoResult.data;
-  const media = mediaResult.data || [];
+  if (activeTab === "dashboard") {
+    const [appointmentsResult, blogsResult, galleryResult] = await Promise.all([
+      supabase
+        .from("appointments")
+        .select("*", { count: "exact" })
+        .order("created_at", { ascending: false })
+        .limit(6),
+      supabase.from("blog_posts").select("id", { count: "exact", head: true }),
+      supabase.from("gallery_images").select("id", { count: "exact", head: true }),
+    ]);
+
+    appointments = appointmentsResult.data || [];
+    appointmentCount = appointmentsResult.count || 0;
+    blogPostCount = blogsResult.count || 0;
+    galleryImageCount = galleryResult.count || 0;
+  }
+
+  if (activeTab === "content") {
+    const [sectionsResult, contactResult] = await Promise.all([
+      supabase.from("homepage_sections").select("*").order("sort_order", { ascending: true }),
+      supabase.from("site_settings").select("*").eq("key", "contact").maybeSingle(),
+    ]);
+
+    homepageSections = sectionsResult.data || [];
+    contact = (contactResult.data?.value || {}) as Record<string, string>;
+  }
+
+  if (activeTab === "doctor") {
+    const [doctorResult, credentialsResult, experienceResult] = await Promise.all([
+      supabase.from("doctor_profile").select("*").eq("id", 1).maybeSingle(),
+      supabase.from("doctor_credentials").select("*").order("sort_order", { ascending: true }),
+      supabase.from("doctor_experiences").select("*").order("sort_order", { ascending: true }),
+    ]);
+
+    doctor = doctorResult.data;
+    credentials = credentialsResult.data || [];
+    experiences = experienceResult.data || [];
+  }
+
+  if (activeTab === "gallery") {
+    const galleryResult = await supabase.from("gallery_images").select("*").order("sort_order", { ascending: true });
+    galleryImages = galleryResult.data || [];
+  }
+
+  if (activeTab === "services") {
+    const servicesResult = await supabase.from("services").select("*").order("sort_order", { ascending: true });
+    services = servicesResult.data || [];
+  }
+
+  if (activeTab === "appointments") {
+    const appointmentsResult = await supabase.from("appointments").select("*").order("created_at", { ascending: false });
+    appointments = appointmentsResult.data || [];
+  }
+
+  if (activeTab === "blog") {
+    const [blogsResult, mediaResult] = await Promise.all([
+      supabase.from("blog_posts").select("*").order("updated_at", { ascending: false }),
+      supabase.from("media_assets").select("*").order("created_at", { ascending: false }),
+    ]);
+
+    blogPosts = blogsResult.data || [];
+    media = mediaResult.data || [];
+  }
+
+  if (activeTab === "faq") {
+    const faqsResult = await supabase.from("faqs").select("*").order("sort_order", { ascending: true });
+    faqs = faqsResult.data || [];
+  }
+
+  if (activeTab === "seo") {
+    const seoResult = await supabase.from("seo_settings").select("*").eq("id", 1).maybeSingle();
+    seo = seoResult.data;
+  }
+
+  if (activeTab === "media") {
+    const mediaResult = await supabase.from("media_assets").select("*").order("created_at", { ascending: false });
+    media = mediaResult.data || [];
+  }
 
   const query = (params.q || "").toLowerCase();
   const filteredAppointments = appointments.filter((appointment) =>
@@ -175,8 +235,9 @@ export default async function AdminPage({
           {activeTab === "dashboard" ? (
             <DashboardOverview
               appointments={appointments}
-              blogPosts={blogPosts}
-              galleryImages={galleryImages}
+              appointmentCount={appointmentCount}
+              blogPostCount={blogPostCount}
+              galleryImageCount={galleryImageCount}
               userEmail={user.email || ""}
             />
           ) : null}
@@ -248,21 +309,23 @@ function Notice({ type, text }: { type: "success" | "error"; text: string }) {
 
 function DashboardOverview({
   appointments,
-  blogPosts,
-  galleryImages,
+  appointmentCount,
+  blogPostCount,
+  galleryImageCount,
   userEmail,
 }: {
   appointments: any[];
-  blogPosts: any[];
-  galleryImages: any[];
+  appointmentCount: number;
+  blogPostCount: number;
+  galleryImageCount: number;
   userEmail: string;
 }) {
   return (
     <div className="grid gap-6">
       <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard label="Total Appointments" value={appointments.length} />
-        <StatCard label="Total Blog Posts" value={blogPosts.length} />
-        <StatCard label="Gallery Images" value={galleryImages.length} />
+        <StatCard label="Total Appointments" value={appointmentCount} />
+        <StatCard label="Total Blog Posts" value={blogPostCount} />
+        <StatCard label="Gallery Images" value={galleryImageCount} />
       </div>
       <Panel title="Recent appointments" description={`Signed in as ${userEmail}`}>
         <div className="grid gap-3">
