@@ -25,7 +25,7 @@ export function GallerySection() {
   useEffect(() => {
     let mounted = true;
 
-    fetch("/api/gallery")
+    fetch("/api/gallery", { cache: "no-store" })
       .then((response) => response.json())
       .then((data: { items?: GalleryItem[] }) => {
         if (mounted && data.items?.length) {

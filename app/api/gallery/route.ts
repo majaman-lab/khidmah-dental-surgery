@@ -10,7 +10,7 @@ export async function GET() {
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!url || !anonKey) {
-    return NextResponse.json({ items: galleryItems });
+    return NextResponse.json({ items: galleryItems }, { headers: { "cache-control": "no-store" } });
   }
 
   const supabase = createClient(url, anonKey);
@@ -20,7 +20,7 @@ export async function GET() {
     .order("sort_order", { ascending: true });
 
   if (error || !data?.length) {
-    return NextResponse.json({ items: galleryItems });
+    return NextResponse.json({ items: galleryItems }, { headers: { "cache-control": "no-store" } });
   }
 
   return NextResponse.json({
@@ -32,5 +32,5 @@ export async function GET() {
       width: item.width || 1200,
       height: item.height || 900,
     })),
-  });
+  }, { headers: { "cache-control": "no-store" } });
 }

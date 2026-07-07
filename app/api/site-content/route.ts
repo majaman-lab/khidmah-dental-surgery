@@ -8,7 +8,7 @@ export async function GET() {
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!url || !anonKey) {
-    return NextResponse.json({ configured: false });
+    return NextResponse.json({ configured: false }, { headers: { "cache-control": "no-store" } });
   }
 
   const supabase = createClient(url, anonKey);
@@ -34,5 +34,5 @@ export async function GET() {
     services: services.data || [],
     faqs: faqs.data || [],
     seo: seo.data || null,
-  });
+  }, { headers: { "cache-control": "no-store" } });
 }

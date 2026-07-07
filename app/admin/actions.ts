@@ -22,6 +22,16 @@ function slugify(value: string) {
     .replace(/(^-|-$)+/g, "");
 }
 
+function revalidateSiteContent() {
+  revalidatePath("/");
+  revalidatePath("/api/site-content");
+}
+
+function revalidateGalleryContent() {
+  revalidatePath("/");
+  revalidatePath("/api/gallery");
+}
+
 export async function loginAdmin(formData: FormData) {
   const email = stringValue(formData, "email");
   const password = stringValue(formData, "password");
@@ -84,7 +94,7 @@ export async function updateSiteSettings(formData: FormData) {
     updated_at: new Date().toISOString(),
   });
 
-  revalidatePath("/");
+  revalidateSiteContent();
   redirect("/admin?tab=content&success=Contact updated");
 }
 
@@ -101,7 +111,7 @@ export async function updateHomepageSection(formData: FormData) {
     updated_at: new Date().toISOString(),
   });
 
-  revalidatePath("/");
+  revalidateSiteContent();
   redirect("/admin?tab=content&success=Section updated");
 }
 
@@ -118,7 +128,7 @@ export async function updateDoctorProfile(formData: FormData) {
     updated_at: new Date().toISOString(),
   });
 
-  revalidatePath("/");
+  revalidateSiteContent();
   redirect("/admin?tab=doctor&success=Doctor profile updated");
 }
 
@@ -139,7 +149,7 @@ export async function upsertDoctorCredential(formData: FormData) {
     await supabase.from("doctor_credentials").insert(payload);
   }
 
-  revalidatePath("/");
+  revalidateSiteContent();
   redirect("/admin?tab=doctor&success=Credential saved");
 }
 
@@ -159,7 +169,7 @@ export async function upsertDoctorExperience(formData: FormData) {
     await supabase.from("doctor_experiences").insert(payload);
   }
 
-  revalidatePath("/");
+  revalidateSiteContent();
   redirect("/admin?tab=doctor&success=Experience saved");
 }
 
@@ -184,7 +194,11 @@ export async function deleteRow(formData: FormData) {
   }
 
   await supabase.from(table).delete().eq("id", id);
-  revalidatePath("/");
+  if (table === "gallery_images") {
+    revalidateGalleryContent();
+  } else {
+    revalidateSiteContent();
+  }
   redirect(`/admin?tab=${tab}&success=Deleted`);
 }
 
@@ -207,7 +221,7 @@ export async function upsertGalleryImage(formData: FormData) {
     await supabase.from("gallery_images").insert(payload);
   }
 
-  revalidatePath("/");
+  revalidateGalleryContent();
   redirect("/admin?tab=gallery&success=Gallery image saved");
 }
 
@@ -231,7 +245,7 @@ export async function upsertService(formData: FormData) {
     await supabase.from("services").insert(payload);
   }
 
-  revalidatePath("/");
+  revalidateSiteContent();
   redirect("/admin?tab=services&success=Service saved");
 }
 
@@ -290,7 +304,7 @@ export async function upsertFaq(formData: FormData) {
     await supabase.from("faqs").insert(payload);
   }
 
-  revalidatePath("/");
+  revalidateSiteContent();
   redirect("/admin?tab=faq&success=FAQ saved");
 }
 
@@ -304,7 +318,7 @@ export async function updateSeo(formData: FormData) {
     updated_at: new Date().toISOString(),
   });
 
-  revalidatePath("/");
+  revalidateSiteContent();
   redirect("/admin?tab=seo&success=SEO updated");
 }
 

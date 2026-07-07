@@ -233,6 +233,15 @@ type CmsContent = {
     description: string;
     icon: string;
   }>;
+  credentials?: Array<{
+    label: string;
+    title: string;
+    description: string;
+  }>;
+  experiences?: Array<{
+    role: string;
+    organization: string;
+  }>;
   faqs?: Array<{
     question: string;
     answer: string;
@@ -243,11 +252,49 @@ const iconMap: Record<string, LucideIcon> = {
   Award,
   BadgeCheck,
   CheckCircle2,
+  Clock3,
+  GraduationCap,
   ShieldCheck,
   Smile,
   Sparkles,
   Stethoscope,
 };
+
+function credentialIcon(label: string, title: string) {
+  const value = `${label} ${title}`.toLowerCase();
+
+  if (value.includes("degree") || value.includes("bds")) {
+    return GraduationCap;
+  }
+
+  if (value.includes("pgt") || value.includes("training")) {
+    return Award;
+  }
+
+  if (value.includes("bmdc") || value.includes("registration")) {
+    return CheckCircle2;
+  }
+
+  return BadgeCheck;
+}
+
+function experienceIcon(label: string, title: string, text: string) {
+  const value = `${label} ${title} ${text}`.toLowerCase();
+
+  if (value.includes("owner") || value.includes("chief")) {
+    return ShieldCheck;
+  }
+
+  if (value.includes("hmo") || value.includes("hospital")) {
+    return Award;
+  }
+
+  if (value.includes("intern")) {
+    return GraduationCap;
+  }
+
+  return Stethoscope;
+}
 
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -256,7 +303,7 @@ export default function Home() {
   useEffect(() => {
     let mounted = true;
 
-    fetch("/api/site-content")
+    fetch("/api/site-content", { cache: "no-store" })
       .then((response) => response.json())
       .then((data: CmsContent & { configured?: boolean }) => {
         if (mounted && data.configured !== false) {
@@ -334,6 +381,22 @@ export default function Home() {
   const displayedFaqs = cmsContent?.faqs?.length
     ? cmsContent.faqs.map((faq) => ({ q: faq.question, a: faq.answer }))
     : faqs;
+  const displayedCredentials = cmsContent?.credentials?.length
+    ? cmsContent.credentials.map((credential) => ({
+        label: credential.label,
+        title: credential.title,
+        text: credential.description,
+        icon: credentialIcon(credential.label, credential.title),
+      }))
+    : clinicalCredentials;
+  const displayedExperience = cmsContent?.experiences?.length
+    ? cmsContent.experiences.map((experience) => ({
+        label: experience.role.includes("Former") ? "Former" : "Current",
+        title: experience.role,
+        text: experience.organization,
+        icon: experienceIcon("", experience.role, experience.organization),
+      }))
+    : professionalExperience;
 
   return (
     <main id="main-content" className="min-h-screen overflow-hidden">
@@ -557,13 +620,13 @@ export default function Home() {
               eyebrow="Clinical Credentials"
               title="Education, training & registration"
               icon={Award}
-              items={clinicalCredentials}
+              items={displayedCredentials}
             />
             <ProfileList
               eyebrow="Professional Experience"
               title="Clinical work history"
               icon={Clock3}
-              items={professionalExperience}
+              items={displayedExperience}
             />
           </motion.div>
         </div>
