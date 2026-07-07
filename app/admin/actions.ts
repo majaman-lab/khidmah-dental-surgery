@@ -193,7 +193,16 @@ export async function deleteRow(formData: FormData) {
     redirect(`/admin?tab=${tab}&error=Invalid delete request`);
   }
 
-  await supabase.from(table).delete().eq("id", id);
+  const { error } = await supabase
+    .from(table)
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    redirect(
+      `/admin?tab=${tab}&error=${encodeURIComponent(error.message)}`
+    );
+  }
   if (table === "gallery_images") {
     revalidateGalleryContent();
   } else {
