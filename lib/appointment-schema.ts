@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const appointmentSchema = z.object({
   fullName: z.string().trim().min(2, "Full name is required"),
+  email: z.string().trim().email("Enter a valid email address"),
   mobileNumber: z
     .string()
     .trim()

@@ -51,6 +51,7 @@ export function BookAppointmentForm() {
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
       fullName: "",
+      email: "",
       mobileNumber: "",
       serviceNeeded: "",
       preferredDate: "",
@@ -191,6 +192,19 @@ export function BookAppointmentForm() {
               aria-describedby={errors.fullName ? "fullName-error" : undefined}
               className={inputClass(Boolean(errors.fullName))}
               placeholder="Patient full name"
+            />
+          </Field>
+
+          <Field label="Email Address" error={errors.email?.message} errorId="email-error">
+            <input
+              {...register("email")}
+              id="email"
+              type="email"
+              autoComplete="email"
+              aria-invalid={Boolean(errors.email)}
+              aria-describedby={errors.email ? "email-error" : undefined}
+              className={inputClass(Boolean(errors.email))}
+              placeholder="patient@example.com"
             />
           </Field>
 

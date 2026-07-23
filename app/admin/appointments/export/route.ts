@@ -14,6 +14,7 @@ export async function GET() {
   const rows = data || [];
   const headers = [
     "Patient Name",
+    "Patient Email",
     "Mobile Number",
     "Service Needed",
     "Preferred Date",
@@ -29,6 +30,7 @@ export async function GET() {
     ...rows.map((row) =>
       [
         row.patient_name,
+        row.patient_email,
         row.mobile_number,
         row.service_needed,
         row.preferred_date,

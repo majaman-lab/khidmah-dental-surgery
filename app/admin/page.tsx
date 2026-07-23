@@ -198,7 +198,14 @@ export default async function AdminPage({
 
   const query = (params.q || "").toLowerCase();
   const filteredAppointments = appointments.filter((appointment) =>
-    [appointment.patient_name, appointment.mobile_number, appointment.service_needed, appointment.status, appointment.reference_number]
+    [
+      appointment.patient_name,
+      appointment.patient_email,
+      appointment.mobile_number,
+      appointment.service_needed,
+      appointment.status,
+      appointment.reference_number,
+    ]
       .join(" ")
       .toLowerCase()
       .includes(query),
@@ -548,6 +555,9 @@ function AppointmentsPanel({
                 <p className="text-sm leading-6 text-muted-foreground">
                   {appointment.mobile_number} · {appointment.service_needed} · {appointment.preferred_date} · {appointment.preferred_time}
                 </p>
+                {appointment.patient_email ? (
+                  <p className="mt-1 text-xs font-semibold text-muted-foreground">{appointment.patient_email}</p>
+                ) : null}
                 {appointment.appointment_slot_id ? (
                   <p className="mt-1 text-xs font-semibold text-primary">Slot ID: {appointment.appointment_slot_id}</p>
                 ) : null}
