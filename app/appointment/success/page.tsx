@@ -42,9 +42,31 @@ export default async function AppointmentSuccessPage({
   const appointmentTime = params.time || "Selected time";
   const referenceNumber = params.ref || "Pending";
   const whatsappUrl = params.whatsapp || defaultWhatsappUrl;
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://khidmahdentalsurgery.com",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Appointment Confirmation",
+        item: "https://khidmahdentalsurgery.com/appointment/success",
+      },
+    ],
+  };
 
   return (
     <main id="main-content" className="min-h-screen overflow-hidden">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       <section className="section-shell grid min-h-screen place-items-center py-12">
         <div className="w-full max-w-3xl rounded-lg border border-white bg-white p-5 shadow-soft sm:p-8">
           <div className="text-center">

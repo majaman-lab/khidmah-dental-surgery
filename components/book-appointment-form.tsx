@@ -58,6 +58,7 @@ export function BookAppointmentForm() {
       preferredTime: "",
       appointmentSlotId: "",
       message: "",
+      turnstileToken: "",
     },
   });
   const selectedDate = watch("preferredDate");
@@ -182,6 +183,8 @@ export function BookAppointmentForm() {
       ) : null}
 
       <form onSubmit={handleSubmit(onSubmit)} className="mt-8 grid gap-5">
+        <input type="hidden" {...register("turnstileToken")} />
+
         <div className="grid gap-5 sm:grid-cols-2">
           <Field label="Full Name" error={errors.fullName?.message} errorId="fullName-error">
             <input

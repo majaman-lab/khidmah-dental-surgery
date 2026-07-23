@@ -21,7 +21,9 @@ import {
   ShieldCheck,
   Smile,
   Sparkles,
+  Star,
   Stethoscope,
+  Users,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -38,6 +40,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const GallerySection = dynamic(() =>
   import("@/components/gallery-section").then((mod) => mod.GallerySection),
+);
+
+const BeforeAfterShowcase = dynamic(() =>
+  import("@/components/before-after-showcase").then((mod) => mod.BeforeAfterShowcase),
 );
 
 const navItems = [
@@ -165,6 +171,39 @@ const whyChoose = [
   "Clear Treatment Explanation",
   "Appointment-Based Care",
   "Convenient Beanibazar Location",
+];
+
+const heroTrustSignals = [
+  {
+    label: "Happy Patients",
+    value: "Trusted locally",
+    icon: Users,
+  },
+  {
+    label: "Years of Experience",
+    value: "Hospital & chamber care",
+    icon: Award,
+  },
+  {
+    label: "Google Rating",
+    value: "Reviews coming soon",
+    icon: Star,
+  },
+];
+
+const reviewPlaceholders = [
+  {
+    name: "Patient Review",
+    text: "Personal consultation, clear explanation, and a calm chamber experience.",
+  },
+  {
+    name: "Patient Review",
+    text: "Appointment-based care designed to reduce waiting and improve comfort.",
+  },
+  {
+    name: "Patient Review",
+    text: "A trusted Beanibazar dental chamber led directly by Dr. Md. Iqbal Hossain.",
+  },
 ];
 
 const faqs = [
@@ -511,25 +550,38 @@ export default function Home() {
               {heroSection.body}
             </p>
             <div className="mt-9">
-              <Button size="lg" className="h-14 bg-[#1f8f5f] px-7 text-base shadow-sm hover:bg-[#18764f]" asChild>
-                <Link href="/book-appointment">
-                  <MessageCircle className="h-5 w-5" aria-hidden="true" />
-                  Book Appointment
-                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                </Link>
-              </Button>
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Button size="lg" className="h-14 bg-[#1f8f5f] px-7 text-base shadow-sm hover:bg-[#18764f]" asChild>
+                  <Link href="/book-appointment">
+                    <MessageCircle className="h-5 w-5" aria-hidden="true" />
+                    Book Appointment
+                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  </Link>
+                </Button>
+                <Button size="lg" variant="outline" className="h-14 px-7 text-base" asChild>
+                  <a href={liveTelHref}>
+                    <Phone className="h-5 w-5" aria-hidden="true" />
+                    Emergency Call
+                  </a>
+                </Button>
+              </div>
             </div>
             <div className="mt-10 grid gap-3 sm:grid-cols-3">
-              {["Single-doctor care", "Clear explanation", "Beanibazar location"].map((item) => (
+              {heroTrustSignals.map((item) => (
                 <motion.div
-                  key={item}
+                  key={item.label}
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.18, ease: smoothEase }}
-                  className="flex min-h-16 items-center gap-3 rounded-lg border border-white bg-white/76 p-4 shadow-sm"
+                  className="flex min-h-20 items-center gap-3 rounded-lg border border-white bg-white/76 p-4 shadow-sm"
                 >
-                  <CheckCircle2 className="h-5 w-5 text-primary" aria-hidden="true" />
-                  <span className="text-sm font-semibold">{item}</span>
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-accent text-primary">
+                    <item.icon className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <span>
+                    <span className="block text-sm font-bold">{item.label}</span>
+                    <span className="mt-1 block text-xs font-semibold leading-5 text-muted-foreground">{item.value}</span>
+                  </span>
                 </motion.div>
               ))}
             </div>
@@ -688,6 +740,10 @@ export default function Home() {
       </section>
 
       <GallerySection />
+
+      <GoogleReviewsSection />
+
+      <BeforeAfterShowcase />
 
       {latestArticles.length ? (
         <section className="content-section bg-white py-24 sm:py-32">
@@ -892,6 +948,46 @@ function SectionHeader({
         <p className="text-sm font-bold uppercase tracking-[0.2em] text-primary">{eyebrow}</p>
         <h2 className="mt-3 text-3xl font-bold tracking-normal sm:text-4xl">{title}</h2>
         <p className="mt-4 text-lg leading-8 text-muted-foreground">{text}</p>
+      </motion.div>
+    </section>
+  );
+}
+
+function GoogleReviewsSection() {
+  return (
+    <section className="section-shell content-section py-24 sm:py-32">
+      <motion.div {...fadeUp} className="grid gap-10 lg:grid-cols-[0.72fr_1fr] lg:items-start">
+        <div>
+          <p className="text-sm font-bold uppercase tracking-[0.2em] text-primary">Patient Trust</p>
+          <h2 className="mt-3 text-3xl font-bold tracking-normal sm:text-4xl">
+            Google reviews coming soon
+          </h2>
+          <p className="mt-4 text-lg leading-8 text-muted-foreground">
+            This section is prepared for verified Google reviews and patient feedback as the chamber collects public testimonials.
+          </p>
+          <div className="mt-6 inline-flex items-center gap-2 rounded-md border border-primary/18 bg-white px-4 py-3 text-sm font-bold text-primary shadow-sm">
+            <Star className="h-4 w-4 fill-current" aria-hidden="true" />
+            Google Rating placeholder
+          </div>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {reviewPlaceholders.map((review, index) => (
+            <motion.article
+              key={`${review.name}-${index}`}
+              {...fadeUp}
+              transition={{ duration: 0.55, delay: index * 0.04 }}
+              className="rounded-lg border border-border bg-white p-5 shadow-sm"
+            >
+              <div className="flex gap-1 text-primary" aria-hidden="true">
+                {Array.from({ length: 5 }).map((_, starIndex) => (
+                  <Star key={starIndex} className="h-4 w-4 fill-current" />
+                ))}
+              </div>
+              <p className="mt-4 text-sm leading-7 text-muted-foreground">{review.text}</p>
+              <p className="mt-4 text-sm font-bold">{review.name}</p>
+            </motion.article>
+          ))}
+        </div>
       </motion.div>
     </section>
   );

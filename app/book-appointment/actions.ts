@@ -36,6 +36,15 @@ export async function submitAppointment(
   }
 
   const data = parsed.data;
+  const turnstileCheck = await verifyTurnstileToken(data.turnstileToken);
+
+  if (!turnstileCheck.ok) {
+    return {
+      ok: false,
+      error: turnstileCheck.error,
+    };
+  }
+
   const savedAppointment = await saveAppointment(data);
 
   if (!savedAppointment.ok) {
@@ -231,6 +240,47 @@ async function saveAppointment(data: AppointmentValues): Promise<
     preferredDate: selectedSlot.slot_date,
     preferredTime: selectedSlot.slot_time,
     referenceNumber,
+  };
+}
+
+async function verifyTurnstileToken(token?: string): Promise<
+  | {
+      ok: true;
+    }
+  | {
+      ok: false;
+      error: string;
+    }
+> {
+  const secretKey = process.env.TURNSTILE_SECRET_KEY;
+
+  if (!secretKey || !token) {
+    return { ok: true };
+  }
+
+  try {
+    const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      headers: {
+        "content-type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        secret: secretKey,
+        response: token,
+      }),
+    });
+    const result = (await response.json()) as { success?: boolean };
+
+    if (result.success) {
+      return { ok: true };
+    }
+  } catch (error) {
+    console.error("Turnstile verification failed:", error);
+  }
+
+  return {
+    ok: false,
+    error: "Could not verify the appointment request. Please refresh and try again.",
   };
 }
 

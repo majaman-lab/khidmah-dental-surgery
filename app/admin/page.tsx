@@ -64,10 +64,62 @@ type AdminSearchParams = {
   success?: string;
   error?: string;
   q?: string;
+  date?: string;
+  status?: string;
+  sort?: string;
+  dir?: string;
+  page?: string;
 };
+
+type AppointmentStatus = "Pending" | "Confirmed" | "Completed" | "Cancelled";
+
+type AppointmentSort = "created_at" | "preferred_date" | "preferred_time" | "patient_name" | "service_needed" | "status";
+
+const appointmentStatuses: AppointmentStatus[] = ["Pending", "Confirmed", "Completed", "Cancelled"];
+const appointmentSortFields: AppointmentSort[] = [
+  "created_at",
+  "preferred_date",
+  "preferred_time",
+  "patient_name",
+  "service_needed",
+  "status",
+];
+const appointmentPageSize = 10;
 
 function isAdminTab(tab: string | undefined): tab is AdminTab {
   return tabs.some(([id]) => id === tab);
+}
+
+function getDhakaDate() {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Dhaka",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const year = parts.find((part) => part.type === "year")?.value;
+  const month = parts.find((part) => part.type === "month")?.value;
+  const day = parts.find((part) => part.type === "day")?.value;
+
+  return `${year}-${month}-${day}`;
+}
+
+function appointmentHref(
+  params: AdminSearchParams,
+  updates: Partial<Pick<AdminSearchParams, "q" | "date" | "status" | "sort" | "dir" | "page">>,
+) {
+  const next = new URLSearchParams();
+  next.set("tab", "appointments");
+
+  (["q", "date", "status", "sort", "dir", "page"] as const).forEach((key) => {
+    const value = updates[key] ?? params[key];
+
+    if (value && !(key === "page" && value === "1")) {
+      next.set(key, value);
+    }
+  });
+
+  return `/admin?${next.toString()}`;
 }
 
 export default async function AdminPage({
@@ -109,6 +161,16 @@ export default async function AdminPage({
   let media: any[] = [];
   let appointmentSlots: any[] = [];
   let unavailableDays: any[] = [];
+  let appointmentStats = {
+    today: 0,
+    pending: 0,
+    confirmed: 0,
+    completed: 0,
+    cancelled: 0,
+    upcoming: 0,
+  };
+  let recentAppointments: any[] = [];
+  let appointmentTotal = 0;
 
   if (activeTab === "dashboard") {
     const [appointmentsResult, blogsResult, galleryResult] = await Promise.all([
@@ -160,13 +222,88 @@ export default async function AdminPage({
   }
 
   if (activeTab === "appointments") {
-    const [appointmentsResult, slotsResult, unavailableDaysResult] = await Promise.all([
-      supabase.from("appointments").select("*").order("created_at", { ascending: false }),
+    const appointmentQuery = (params.q || "").trim();
+    const selectedDate = params.date?.trim() || "";
+    const selectedStatus = appointmentStatuses.includes(params.status as AppointmentStatus)
+      ? (params.status as AppointmentStatus)
+      : "";
+    const sortField = appointmentSortFields.includes(params.sort as AppointmentSort)
+      ? (params.sort as AppointmentSort)
+      : "created_at";
+    const sortDirection = params.dir === "asc" ? "asc" : "desc";
+    const currentPage = Math.max(1, Number(params.page) || 1);
+    const from = (currentPage - 1) * appointmentPageSize;
+    const to = from + appointmentPageSize - 1;
+    const today = getDhakaDate();
+
+    let appointmentsQuery = supabase
+      .from("appointments")
+      .select("*", { count: "exact" });
+
+    if (appointmentQuery) {
+      const escapedQuery = appointmentQuery.replace(/[,%()]/g, " ").trim();
+      if (escapedQuery) {
+        appointmentsQuery = appointmentsQuery.or(
+          [
+            `patient_name.ilike.%${escapedQuery}%`,
+            `patient_email.ilike.%${escapedQuery}%`,
+            `mobile_number.ilike.%${escapedQuery}%`,
+            `service_needed.ilike.%${escapedQuery}%`,
+            `reference_number.ilike.%${escapedQuery}%`,
+          ].join(","),
+        );
+      }
+    }
+
+    if (selectedDate) {
+      appointmentsQuery = appointmentsQuery.eq("preferred_date", selectedDate);
+    }
+
+    if (selectedStatus) {
+      appointmentsQuery = appointmentsQuery.eq("status", selectedStatus);
+    }
+
+    const [
+      appointmentsResult,
+      todayResult,
+      pendingResult,
+      confirmedResult,
+      completedResult,
+      cancelledResult,
+      upcomingResult,
+      recentResult,
+      slotsResult,
+      unavailableDaysResult,
+    ] = await Promise.all([
+      appointmentsQuery
+        .order(sortField, { ascending: sortDirection === "asc" })
+        .range(from, to),
+      supabase.from("appointments").select("id", { count: "exact", head: true }).eq("preferred_date", today),
+      supabase.from("appointments").select("id", { count: "exact", head: true }).eq("status", "Pending"),
+      supabase.from("appointments").select("id", { count: "exact", head: true }).eq("status", "Confirmed"),
+      supabase.from("appointments").select("id", { count: "exact", head: true }).eq("status", "Completed"),
+      supabase.from("appointments").select("id", { count: "exact", head: true }).eq("status", "Cancelled"),
+      supabase
+        .from("appointments")
+        .select("id", { count: "exact", head: true })
+        .gte("preferred_date", today)
+        .neq("status", "Cancelled"),
+      supabase.from("appointments").select("*").order("created_at", { ascending: false }).limit(5),
       supabase.from("appointment_slots").select("*").order("slot_date", { ascending: true }).order("slot_time", { ascending: true }),
       supabase.from("appointment_unavailable_days").select("*").order("unavailable_date", { ascending: true }),
     ]);
 
     appointments = appointmentsResult.data || [];
+    appointmentTotal = appointmentsResult.count || 0;
+    appointmentStats = {
+      today: todayResult.count || 0,
+      pending: pendingResult.count || 0,
+      confirmed: confirmedResult.count || 0,
+      completed: completedResult.count || 0,
+      cancelled: cancelledResult.count || 0,
+      upcoming: upcomingResult.count || 0,
+    };
+    recentAppointments = recentResult.data || [];
     appointmentSlots = slotsResult.data || [];
     unavailableDays = unavailableDaysResult.data || [];
   }
@@ -195,21 +332,6 @@ export default async function AdminPage({
     const mediaResult = await supabase.from("media_assets").select("*").order("created_at", { ascending: false });
     media = mediaResult.data || [];
   }
-
-  const query = (params.q || "").toLowerCase();
-  const filteredAppointments = appointments.filter((appointment) =>
-    [
-      appointment.patient_name,
-      appointment.patient_email,
-      appointment.mobile_number,
-      appointment.service_needed,
-      appointment.status,
-      appointment.reference_number,
-    ]
-      .join(" ")
-      .toLowerCase()
-      .includes(query),
-  );
 
   return (
     <main className="min-h-screen bg-background">
@@ -274,10 +396,13 @@ export default async function AdminPage({
 
           {activeTab === "appointments" ? (
             <AppointmentsPanel
-              appointments={filteredAppointments}
+              appointments={appointments}
+              appointmentStats={appointmentStats}
+              recentAppointments={recentAppointments}
+              total={appointmentTotal}
               slots={appointmentSlots}
               unavailableDays={unavailableDays}
-              query={params.q || ""}
+              params={params}
             />
           ) : null}
 
@@ -357,7 +482,7 @@ function DashboardOverview({
               <div>
                 <p className="font-bold">{appointment.patient_name}</p>
                 <p className="text-sm text-muted-foreground">
-                  {appointment.service_needed} · {appointment.preferred_date} · {appointment.preferred_time}
+                  {appointment.service_needed} - {appointment.preferred_date} - {appointment.preferred_time}
                 </p>
               </div>
               <Badge>{appointment.status}</Badge>
@@ -460,17 +585,70 @@ function ServicesPanel({ services }: { services: any[] }) {
 
 function AppointmentsPanel({
   appointments,
+  appointmentStats,
+  recentAppointments,
+  total,
   slots,
   unavailableDays,
-  query,
+  params,
 }: {
   appointments: any[];
+  appointmentStats: {
+    today: number;
+    pending: number;
+    confirmed: number;
+    completed: number;
+    cancelled: number;
+    upcoming: number;
+  };
+  recentAppointments: any[];
+  total: number;
   slots: any[];
   unavailableDays: any[];
-  query: string;
+  params: AdminSearchParams;
 }) {
+  const currentPage = Math.max(1, Number(params.page) || 1);
+  const totalPages = Math.max(1, Math.ceil(total / appointmentPageSize));
+  const sortField = appointmentSortFields.includes(params.sort as AppointmentSort)
+    ? (params.sort as AppointmentSort)
+    : "created_at";
+  const sortDirection = params.dir === "asc" ? "asc" : "desc";
+  const firstItem = total === 0 ? 0 : (currentPage - 1) * appointmentPageSize + 1;
+  const lastItem = Math.min(currentPage * appointmentPageSize, total);
+  const pageStart = Math.max(1, Math.min(currentPage - 2, Math.max(1, totalPages - 4)));
+  const visiblePages = Array.from({ length: Math.min(5, totalPages) }, (_, index) => pageStart + index);
+
   return (
     <div className="grid gap-6">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
+        <StatCard label="Today's Appointments" value={appointmentStats.today} />
+        <StatCard label="Pending" value={appointmentStats.pending} />
+        <StatCard label="Confirmed" value={appointmentStats.confirmed} />
+        <StatCard label="Completed" value={appointmentStats.completed} />
+        <StatCard label="Cancelled" value={appointmentStats.cancelled} />
+        <StatCard label="Upcoming" value={appointmentStats.upcoming} />
+      </div>
+
+      <Panel title="Recent Activity" description="Latest appointment requests received by the chamber.">
+        <div className="grid gap-3">
+          {recentAppointments.map((appointment) => (
+            <div key={appointment.id} className="grid gap-2 rounded-lg border border-border bg-background p-4 md:grid-cols-[1fr_auto] md:items-center">
+              <div>
+                <p className="font-bold">{appointment.patient_name}</p>
+                <p className="text-sm leading-6 text-muted-foreground">
+                  {appointment.service_needed} - {appointment.preferred_date} - {formatAdminTime(appointment.preferred_time)}
+                </p>
+                {appointment.reference_number ? (
+                  <p className="mt-1 text-xs font-semibold text-primary">{appointment.reference_number}</p>
+                ) : null}
+              </div>
+              <Badge>{appointment.status}</Badge>
+            </div>
+          ))}
+          {recentAppointments.length === 0 ? <EmptyState text="No recent appointment activity." /> : null}
+        </div>
+      </Panel>
+
       <Panel title="Available appointment slots" description="Create date-specific slots, edit times, disable individual slots, and remove unused slots.">
         <div className="grid gap-4">
           <form action={upsertAppointmentSlot} className="grid gap-3 rounded-lg border border-border bg-background p-4 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end">
@@ -532,57 +710,203 @@ function AppointmentsPanel({
       </Panel>
 
       <Panel title="Appointments" description="Search, update status, delete, and export appointment requests.">
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row">
-          <form className="flex flex-1 gap-2">
-            <input type="hidden" name="tab" value="appointments" />
+        <form className="mb-5 grid gap-3 rounded-lg border border-border bg-background p-4 lg:grid-cols-[1fr_auto_auto_auto] lg:items-end">
+          <input type="hidden" name="tab" value="appointments" />
+          <label className="grid gap-2">
+            <span className="text-sm font-bold">Search</span>
             <input
               name="q"
-              defaultValue={query}
-              placeholder="Search appointments"
-              className="h-11 flex-1 rounded-md border border-border bg-background px-4 text-sm outline-none focus:border-primary"
+              defaultValue={params.q || ""}
+              placeholder="Name, phone, email, service, reference"
+              className="h-11 rounded-md border border-border bg-white px-4 text-sm outline-none focus:border-primary"
             />
-            <Button type="submit" variant="outline">Search</Button>
-          </form>
-          <Button asChild>
-            <Link href="/admin/appointments/export">Export CSV</Link>
-          </Button>
+          </label>
+          <label className="grid gap-2">
+            <span className="text-sm font-bold">Date Filter</span>
+            <input
+              type="date"
+              name="date"
+              defaultValue={params.date || ""}
+              className="h-11 rounded-md border border-border bg-white px-3 text-sm outline-none focus:border-primary"
+            />
+          </label>
+          <label className="grid gap-2">
+            <span className="text-sm font-bold">Status Filter</span>
+            <select
+              name="status"
+              defaultValue={params.status || ""}
+              className="h-11 rounded-md border border-border bg-white px-3 text-sm outline-none focus:border-primary"
+            >
+              <option value="">All statuses</option>
+              {appointmentStatuses.map((status) => (
+                <option key={status} value={status}>{status}</option>
+              ))}
+            </select>
+          </label>
+          <div className="flex flex-wrap gap-2">
+            <Button type="submit" variant="outline">Apply</Button>
+            <Button asChild variant="outline">
+              <Link href="/admin?tab=appointments">Reset</Link>
+            </Button>
+            <Button asChild>
+              <Link href="/admin/appointments/export">Export CSV</Link>
+            </Button>
+          </div>
+        </form>
+
+        <div className="mb-3 flex flex-col gap-2 text-sm font-semibold text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+          <p>Showing {firstItem}-{lastItem} of {total} appointments</p>
+          <p>Sorted by {labelize(sortField)} {sortDirection === "asc" ? "ascending" : "descending"}</p>
         </div>
-        <div className="grid gap-3">
-          {appointments.map((appointment) => (
-            <div key={appointment.id} className="grid gap-3 rounded-lg border border-border bg-background p-4 lg:grid-cols-[1fr_auto_auto] lg:items-center">
-              <div>
-                <p className="font-bold">{appointment.patient_name}</p>
-                <p className="text-sm leading-6 text-muted-foreground">
-                  {appointment.mobile_number} · {appointment.service_needed} · {appointment.preferred_date} · {appointment.preferred_time}
-                </p>
-                {appointment.patient_email ? (
-                  <p className="mt-1 text-xs font-semibold text-muted-foreground">{appointment.patient_email}</p>
-                ) : null}
-                {appointment.appointment_slot_id ? (
-                  <p className="mt-1 text-xs font-semibold text-primary">Slot ID: {appointment.appointment_slot_id}</p>
-                ) : null}
-                {appointment.reference_number ? (
-                  <p className="mt-1 text-xs font-semibold text-primary">Reference: {appointment.reference_number}</p>
-                ) : null}
-                {appointment.message ? <p className="mt-1 text-sm text-muted-foreground">{appointment.message}</p> : null}
-              </div>
-              <form action={updateAppointmentStatus} className="flex gap-2">
-                <input type="hidden" name="id" value={appointment.id} />
-                <select name="status" defaultValue={appointment.status} className="h-10 rounded-md border border-border bg-white px-3 text-sm">
-                  {["Pending", "Confirmed", "Completed", "Cancelled"].map((status) => (
-                    <option key={status} value={status}>{status}</option>
-                  ))}
-                </select>
-                <Button type="submit" variant="outline">Update</Button>
-              </form>
-              <DeleteButton table="appointments" id={appointment.id} tab="appointments" />
-            </div>
-          ))}
-          {appointments.length === 0 ? <EmptyState text="No appointments found." /> : null}
+
+        <div className="overflow-x-auto rounded-lg border border-border">
+          <table className="w-full min-w-[980px] border-collapse bg-white text-sm">
+            <thead className="bg-background text-left">
+              <tr>
+                <SortableHeader label="Patient" field="patient_name" params={params} activeField={sortField} direction={sortDirection} />
+                <th className="border-b border-border px-4 py-3 font-bold">Contact</th>
+                <SortableHeader label="Service" field="service_needed" params={params} activeField={sortField} direction={sortDirection} />
+                <SortableHeader label="Date" field="preferred_date" params={params} activeField={sortField} direction={sortDirection} />
+                <SortableHeader label="Time" field="preferred_time" params={params} activeField={sortField} direction={sortDirection} />
+                <th className="border-b border-border px-4 py-3 font-bold">Reference</th>
+                <SortableHeader label="Status" field="status" params={params} activeField={sortField} direction={sortDirection} />
+                <th className="border-b border-border px-4 py-3 font-bold">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {appointments.map((appointment) => (
+                <tr key={appointment.id} className="align-top">
+                  <td className="border-b border-border px-4 py-4">
+                    <p className="font-bold">{appointment.patient_name}</p>
+                    {appointment.message ? (
+                      <p className="mt-1 max-w-56 text-xs leading-5 text-muted-foreground">{appointment.message}</p>
+                    ) : null}
+                  </td>
+                  <td className="border-b border-border px-4 py-4">
+                    <p className="font-semibold">{appointment.mobile_number}</p>
+                    {appointment.patient_email ? (
+                      <p className="mt-1 text-xs text-muted-foreground">{appointment.patient_email}</p>
+                    ) : null}
+                  </td>
+                  <td className="border-b border-border px-4 py-4 text-muted-foreground">{appointment.service_needed}</td>
+                  <td className="border-b border-border px-4 py-4 font-semibold">{appointment.preferred_date}</td>
+                  <td className="border-b border-border px-4 py-4 font-semibold">{formatAdminTime(appointment.preferred_time)}</td>
+                  <td className="border-b border-border px-4 py-4">
+                    <p className="font-bold text-primary">{appointment.reference_number || "Not set"}</p>
+                    {appointment.appointment_slot_id ? (
+                      <p className="mt-1 max-w-40 truncate text-xs text-muted-foreground" title={appointment.appointment_slot_id}>
+                        Slot: {appointment.appointment_slot_id}
+                      </p>
+                    ) : null}
+                  </td>
+                  <td className="border-b border-border px-4 py-4">
+                    <Badge>{appointment.status}</Badge>
+                  </td>
+                  <td className="border-b border-border px-4 py-4">
+                    <div className="flex min-w-48 flex-col gap-2">
+                      <form action={updateAppointmentStatus} className="flex gap-2">
+                        <input type="hidden" name="id" value={appointment.id} />
+                        <select name="status" defaultValue={appointment.status} className="h-10 rounded-md border border-border bg-white px-3 text-sm">
+                          {appointmentStatuses.map((status) => (
+                            <option key={status} value={status}>{status}</option>
+                          ))}
+                        </select>
+                        <Button type="submit" variant="outline">Update</Button>
+                      </form>
+                      <DeleteButton table="appointments" id={appointment.id} tab="appointments" />
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {appointments.length === 0 ? <EmptyState text="No appointments found." /> : null}
+
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm font-semibold text-muted-foreground">
+            Page {currentPage} of {totalPages}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" asChild>
+              <Link
+                href={appointmentHref(params, { page: String(Math.max(1, currentPage - 1)) })}
+                aria-disabled={currentPage <= 1}
+                className={currentPage <= 1 ? "pointer-events-none opacity-50" : ""}
+              >
+                Previous
+              </Link>
+            </Button>
+            {visiblePages.map((page) => (
+              <Button key={page} variant={page === currentPage ? "default" : "outline"} asChild>
+                <Link href={appointmentHref(params, { page: String(page) })}>{page}</Link>
+              </Button>
+            ))}
+            <Button variant="outline" asChild>
+              <Link
+                href={appointmentHref(params, { page: String(Math.min(totalPages, currentPage + 1)) })}
+                aria-disabled={currentPage >= totalPages}
+                className={currentPage >= totalPages ? "pointer-events-none opacity-50" : ""}
+              >
+                Next
+              </Link>
+            </Button>
+          </div>
         </div>
       </Panel>
     </div>
   );
+}
+
+function SortableHeader({
+  label,
+  field,
+  params,
+  activeField,
+  direction,
+}: {
+  label: string;
+  field: AppointmentSort;
+  params: AdminSearchParams;
+  activeField: AppointmentSort;
+  direction: "asc" | "desc";
+}) {
+  const isActive = activeField === field;
+  const nextDirection = isActive && direction === "asc" ? "desc" : "asc";
+
+  return (
+    <th className="border-b border-border px-4 py-3 font-bold">
+      <Link
+        href={appointmentHref(params, { sort: field, dir: nextDirection, page: "1" })}
+        className="inline-flex items-center gap-1 text-foreground hover:text-primary"
+      >
+        {label}
+        <span className="text-xs text-muted-foreground">
+          {isActive ? (direction === "asc" ? "ASC" : "DESC") : "SORT"}
+        </span>
+      </Link>
+    </th>
+  );
+}
+
+function formatAdminTime(value: string) {
+  if (!value?.includes(":")) {
+    return value;
+  }
+
+  const [hourValue, minuteValue] = value.split(":");
+  const hour = Number(hourValue);
+  const minute = Number(minuteValue);
+
+  if (!Number.isFinite(hour) || !Number.isFinite(minute)) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("en", {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(2000, 0, 1, hour, minute));
 }
 
 function BlogPanel({ posts, media }: { posts: any[]; media: any[] }) {

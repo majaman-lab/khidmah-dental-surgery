@@ -43,8 +43,31 @@ const telHref = `tel:${phoneNumber}`;
 const whatsappUrl = "https://wa.me/8801727529609";
 
 export default function BookAppointmentPage() {
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://khidmahdentalsurgery.com",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Book Appointment",
+        item: "https://khidmahdentalsurgery.com/book-appointment",
+      },
+    ],
+  };
+
   return (
     <main id="main-content" className="min-h-screen overflow-hidden">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       <section className="section-shell pt-10">
         <Link href="/" className="inline-flex items-center gap-2 text-sm font-bold text-primary">
           <ArrowRight className="h-4 w-4 rotate-180" aria-hidden="true" />

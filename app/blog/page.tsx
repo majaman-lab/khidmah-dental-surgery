@@ -41,12 +41,30 @@ export default async function BlogPage() {
       "Dental tips and treatment guides from Khidmah Dental Surgery in Beanibazar, Sylhet.",
     url: "https://khidmahdentalsurgery.com/blog",
   };
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: "https://khidmahdentalsurgery.com",
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Blog",
+        item: "https://khidmahdentalsurgery.com/blog",
+      },
+    ],
+  };
 
   return (
     <main id="main-content" className="min-h-screen overflow-hidden">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify([schema, breadcrumbSchema]) }}
       />
       <section className="section-shell pt-10">
         <Link
