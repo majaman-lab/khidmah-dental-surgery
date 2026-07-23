@@ -128,13 +128,13 @@ export function BookAppointmentForm() {
 
       setStatus({
         type: "success",
-        message: "Appointment request sent. Opening WhatsApp for confirmation...",
+        message: "Appointment request received. Redirecting to confirmation...",
       });
       reset();
       setSlots([]);
 
       window.setTimeout(() => {
-        window.location.href = result.whatsappUrl;
+        window.location.href = result.successUrl;
       }, 700);
     });
   }
@@ -154,8 +154,8 @@ export function BookAppointmentForm() {
           <p className="text-sm font-bold uppercase tracking-[0.2em] text-primary">Appointment Request</p>
           <h1 className="mt-2 text-3xl font-bold tracking-normal">Book a chamber visit</h1>
           <p className="mt-3 leading-7 text-muted-foreground">
-            Submit your preferred date and time. The chamber will receive an email notification,
-            and WhatsApp will open for confirmation.
+            Submit your preferred date and available time slot. The chamber will receive an email
+            notification, then you will see your appointment reference.
           </p>
         </div>
       </div>

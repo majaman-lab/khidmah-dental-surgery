@@ -2,13 +2,14 @@
 
 import { Resend } from "resend";
 import { createClient } from "@supabase/supabase-js";
+import { randomUUID } from "crypto";
 
 import { appointmentSchema, type AppointmentValues } from "@/lib/appointment-schema";
 
 type AppointmentActionState =
   | {
       ok: true;
-      whatsappUrl: string;
+      successUrl: string;
     }
   | {
       ok: false;
@@ -39,6 +40,7 @@ export async function submitAppointment(
 
   const preferredDate = savedAppointment.preferredDate;
   const preferredTime = savedAppointment.preferredTime;
+  const referenceNumber = savedAppointment.referenceNumber;
   const messageLines = [
     "New Appointment Request - Khidmah Dental Surgery",
     `Patient Name: ${data.fullName}`,
@@ -46,6 +48,8 @@ export async function submitAppointment(
     `Service: ${data.serviceNeeded}`,
     `Preferred Date: ${preferredDate}`,
     `Preferred Time: ${preferredTime}`,
+    `Reference Number: ${referenceNumber}`,
+    "Status: Pending Confirmation",
     `Message: ${data.message || "No additional message"}`,
   ];
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
@@ -81,6 +85,8 @@ export async function submitAppointment(
           <p><strong>Service:</strong> ${escapeHtml(data.serviceNeeded)}</p>
           <p><strong>Preferred Date:</strong> ${escapeHtml(preferredDate)}</p>
           <p><strong>Preferred Time:</strong> ${escapeHtml(preferredTime)}</p>
+          <p><strong>Reference Number:</strong> ${escapeHtml(referenceNumber)}</p>
+          <p><strong>Status:</strong> Pending Confirmation</p>
           <p><strong>Message:</strong> ${escapeHtml(data.message || "No additional message")}</p>
         </div>
       `,
@@ -95,7 +101,15 @@ export async function submitAppointment(
 
     return {
       ok: true,
-      whatsappUrl,
+      successUrl: `/appointment/success?${new URLSearchParams({
+        name: data.fullName,
+        doctor: "Dr. Md. Iqbal Hossain",
+        service: data.serviceNeeded,
+        date: preferredDate,
+        time: preferredTime,
+        ref: referenceNumber,
+        whatsapp: whatsappUrl,
+      }).toString()}`,
     };
   } catch {
     return {
@@ -110,6 +124,7 @@ async function saveAppointment(data: AppointmentValues): Promise<
       ok: true;
       preferredDate: string;
       preferredTime: string;
+      referenceNumber: string;
     }
   | {
       ok: false;
@@ -127,6 +142,7 @@ async function saveAppointment(data: AppointmentValues): Promise<
   }
 
   const supabase = createClient(url, anonKey);
+  const referenceNumber = generateAppointmentReference();
   const { data: selectedSlot, error: slotError } = await supabase
     .from("appointment_slots")
     .select("id, slot_date, slot_time")
@@ -147,6 +163,7 @@ async function saveAppointment(data: AppointmentValues): Promise<
     p_service_needed: data.serviceNeeded,
     p_appointment_slot_id: data.appointmentSlotId,
     p_message: data.message || "",
+    p_reference_number: referenceNumber,
   });
 
   if (error) {
@@ -160,7 +177,14 @@ async function saveAppointment(data: AppointmentValues): Promise<
     ok: true,
     preferredDate: selectedSlot.slot_date,
     preferredTime: selectedSlot.slot_time,
+    referenceNumber,
   };
+}
+
+function generateAppointmentReference() {
+  const datePart = new Date().toISOString().slice(0, 10).replaceAll("-", "");
+  const randomPart = randomUUID().replaceAll("-", "").slice(0, 6).toUpperCase();
+  return `KDS-${datePart}-${randomPart}`;
 }
 
 function escapeHtml(value: string) {
