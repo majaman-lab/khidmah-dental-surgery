@@ -31,14 +31,21 @@ export async function submitAppointment(
   }
 
   const data = parsed.data;
-  await saveAppointment(data);
+  const savedAppointment = await saveAppointment(data);
+
+  if (!savedAppointment.ok) {
+    return savedAppointment;
+  }
+
+  const preferredDate = savedAppointment.preferredDate;
+  const preferredTime = savedAppointment.preferredTime;
   const messageLines = [
     "New Appointment Request - Khidmah Dental Surgery",
     `Patient Name: ${data.fullName}`,
     `Phone: ${data.mobileNumber}`,
     `Service: ${data.serviceNeeded}`,
-    `Preferred Date: ${data.preferredDate}`,
-    `Preferred Time: ${data.preferredTime}`,
+    `Preferred Date: ${preferredDate}`,
+    `Preferred Time: ${preferredTime}`,
     `Message: ${data.message || "No additional message"}`,
   ];
   const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
@@ -72,8 +79,8 @@ export async function submitAppointment(
           <p><strong>Patient Name:</strong> ${escapeHtml(data.fullName)}</p>
           <p><strong>Phone:</strong> ${escapeHtml(data.mobileNumber)}</p>
           <p><strong>Service:</strong> ${escapeHtml(data.serviceNeeded)}</p>
-          <p><strong>Preferred Date:</strong> ${escapeHtml(data.preferredDate)}</p>
-          <p><strong>Preferred Time:</strong> ${escapeHtml(data.preferredTime)}</p>
+          <p><strong>Preferred Date:</strong> ${escapeHtml(preferredDate)}</p>
+          <p><strong>Preferred Time:</strong> ${escapeHtml(preferredTime)}</p>
           <p><strong>Message:</strong> ${escapeHtml(data.message || "No additional message")}</p>
         </div>
       `,
@@ -98,24 +105,62 @@ export async function submitAppointment(
   }
 }
 
-async function saveAppointment(data: AppointmentValues) {
+async function saveAppointment(data: AppointmentValues): Promise<
+  | {
+      ok: true;
+      preferredDate: string;
+      preferredTime: string;
+    }
+  | {
+      ok: false;
+      error: string;
+    }
+> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!url || !anonKey) {
-    return;
+    return {
+      ok: false,
+      error: "Online appointment slots are not configured yet. Please call or WhatsApp the chamber.",
+    };
   }
 
   const supabase = createClient(url, anonKey);
-  await supabase.from("appointments").insert({
-    patient_name: data.fullName,
-    mobile_number: data.mobileNumber,
-    service_needed: data.serviceNeeded,
-    preferred_date: data.preferredDate,
-    preferred_time: data.preferredTime,
-    message: data.message || "",
-    status: "Pending",
+  const { data: selectedSlot, error: slotError } = await supabase
+    .from("appointment_slots")
+    .select("id, slot_date, slot_time")
+    .eq("id", data.appointmentSlotId)
+    .eq("slot_date", data.preferredDate)
+    .maybeSingle();
+
+  if (slotError || !selectedSlot) {
+    return {
+      ok: false,
+      error: "This appointment slot is no longer available. Please choose another slot.",
+    };
+  }
+
+  const { error } = await supabase.rpc("book_appointment", {
+    p_patient_name: data.fullName,
+    p_mobile_number: data.mobileNumber,
+    p_service_needed: data.serviceNeeded,
+    p_appointment_slot_id: data.appointmentSlotId,
+    p_message: data.message || "",
   });
+
+  if (error) {
+    return {
+      ok: false,
+      error: error.message || "This appointment slot is no longer available. Please choose another slot.",
+    };
+  }
+
+  return {
+    ok: true,
+    preferredDate: selectedSlot.slot_date,
+    preferredTime: selectedSlot.slot_time,
+  };
 }
 
 function escapeHtml(value: string) {

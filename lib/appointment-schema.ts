@@ -13,6 +13,7 @@ export const appointmentSchema = z.object({
   serviceNeeded: z.string().min(1, "Please select a service"),
   preferredDate: z.string().min(1, "Preferred date is required"),
   preferredTime: z.string().min(1, "Preferred time is required"),
+  appointmentSlotId: z.string().uuid("Please select an available appointment slot"),
   message: z.string().trim().optional(),
 });
 
@@ -25,14 +26,4 @@ export const appointmentServices = [
   "Crown & Bridge",
   "Braces Consultation",
   "Smile Enhancement",
-];
-
-export const appointmentTimes = [
-  "10:00 AM",
-  "11:00 AM",
-  "12:00 PM",
-  "04:00 PM",
-  "05:00 PM",
-  "06:00 PM",
-  "07:00 PM",
 ];

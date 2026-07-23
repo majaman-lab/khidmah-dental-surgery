@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import { AlertCircle, CalendarCheck, CheckCircle2, Loader2, Send } from "lucide-react";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 
 import { submitAppointment } from "@/app/book-appointment/actions";
@@ -11,13 +11,22 @@ import { Button } from "@/components/ui/button";
 import {
   appointmentSchema,
   appointmentServices,
-  appointmentTimes,
   type AppointmentValues,
 } from "@/lib/appointment-schema";
 import { cn } from "@/lib/utils";
 
+type AppointmentSlot = {
+  id: string;
+  slot_date: string;
+  slot_time: string;
+  note: string;
+};
+
 export function BookAppointmentForm() {
   const [isPending, startTransition] = useTransition();
+  const [slots, setSlots] = useState<AppointmentSlot[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [slotsError, setSlotsError] = useState("");
   const [status, setStatus] = useState<
     | {
         type: "success";
@@ -36,6 +45,8 @@ export function BookAppointmentForm() {
     handleSubmit,
     formState: { errors },
     reset,
+    setValue,
+    watch,
   } = useForm<AppointmentValues>({
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
@@ -44,9 +55,65 @@ export function BookAppointmentForm() {
       serviceNeeded: "",
       preferredDate: "",
       preferredTime: "",
+      appointmentSlotId: "",
       message: "",
     },
   });
+  const selectedDate = watch("preferredDate");
+  const selectedSlotId = watch("appointmentSlotId");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    setValue("appointmentSlotId", "");
+    setValue("preferredTime", "");
+    setSlots([]);
+    setSlotsError("");
+
+    if (!selectedDate) {
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    setSlotsLoading(true);
+
+    fetch(`/api/appointment-slots?date=${encodeURIComponent(selectedDate)}`, {
+      cache: "no-store",
+    })
+      .then((response) => response.json())
+      .then((data: { configured?: boolean; slots?: AppointmentSlot[]; error?: string }) => {
+        if (cancelled) {
+          return;
+        }
+
+        if (data.configured === false) {
+          setSlotsError("Online slot booking is not configured yet. Please call or WhatsApp the chamber.");
+          return;
+        }
+
+        if (data.error) {
+          setSlotsError(data.error);
+          return;
+        }
+
+        setSlots(data.slots || []);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setSlotsError("Could not load available slots. Please try again.");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setSlotsLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedDate, setValue]);
 
   function onSubmit(values: AppointmentValues) {
     setStatus(null);
@@ -64,6 +131,7 @@ export function BookAppointmentForm() {
         message: "Appointment request sent. Opening WhatsApp for confirmation...",
       });
       reset();
+      setSlots([]);
 
       window.setTimeout(() => {
         window.location.href = result.whatsappUrl;
@@ -170,21 +238,54 @@ export function BookAppointmentForm() {
             />
           </Field>
 
-          <Field label="Preferred Time" error={errors.preferredTime?.message} errorId="preferredTime-error">
-            <select
-              {...register("preferredTime")}
-              id="preferredTime"
-              aria-invalid={Boolean(errors.preferredTime)}
-              aria-describedby={errors.preferredTime ? "preferredTime-error" : undefined}
-              className={inputClass(Boolean(errors.preferredTime))}
+          <Field label="Available Time Slot" error={errors.appointmentSlotId?.message || errors.preferredTime?.message} errorId="appointmentSlotId-error">
+            <input type="hidden" {...register("appointmentSlotId")} />
+            <input type="hidden" {...register("preferredTime")} />
+            <div
+              id="appointmentSlotId"
+              aria-invalid={Boolean(errors.appointmentSlotId || errors.preferredTime)}
+              aria-describedby={errors.appointmentSlotId || errors.preferredTime ? "appointmentSlotId-error" : undefined}
+              className={cn(
+                "min-h-12 rounded-md border bg-background p-2",
+                errors.appointmentSlotId || errors.preferredTime ? "border-red-400" : "border-border",
+              )}
             >
-              <option value="">Select a time</option>
-              {appointmentTimes.map((time) => (
-                <option key={time} value={time}>
-                  {time}
-                </option>
-              ))}
-            </select>
+              {!selectedDate ? (
+                <p className="px-2 py-2 text-sm font-medium text-muted-foreground">Choose a date first.</p>
+              ) : slotsLoading ? (
+                <p className="flex items-center gap-2 px-2 py-2 text-sm font-semibold text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  Loading available slots...
+                </p>
+              ) : slotsError ? (
+                <p className="px-2 py-2 text-sm font-semibold text-red-600">{slotsError}</p>
+              ) : slots.length ? (
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {slots.map((slot) => (
+                    <button
+                      key={slot.id}
+                      type="button"
+                      onClick={() => {
+                        setValue("appointmentSlotId", slot.id, { shouldDirty: true, shouldValidate: true });
+                        setValue("preferredTime", slot.slot_time, { shouldDirty: true, shouldValidate: true });
+                      }}
+                      className={cn(
+                        "h-10 rounded-md border px-3 text-sm font-bold transition",
+                        selectedSlotId === slot.id
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border bg-white text-muted-foreground hover:text-primary",
+                      )}
+                    >
+                      {formatSlotTime(slot.slot_time)}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="px-2 py-2 text-sm font-semibold text-muted-foreground">
+                  No available slots for this date. Please choose another date.
+                </p>
+              )}
+            </div>
           </Field>
         </div>
 
@@ -210,6 +311,25 @@ export function BookAppointmentForm() {
       </form>
     </motion.div>
   );
+}
+
+function formatSlotTime(value: string) {
+  if (!value.includes(":")) {
+    return value;
+  }
+
+  const [hourValue, minuteValue] = value.split(":");
+  const hour = Number(hourValue);
+  const minute = Number(minuteValue);
+
+  if (!Number.isFinite(hour) || !Number.isFinite(minute)) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("en", {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(2000, 0, 1, hour, minute));
 }
 
 function Field({

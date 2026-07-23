@@ -34,6 +34,12 @@ function revalidateGalleryContent() {
   revalidatePath("/api/gallery");
 }
 
+function revalidateAppointments() {
+  revalidatePath("/admin");
+  revalidatePath("/book-appointment");
+  revalidatePath("/api/appointment-slots");
+}
+
 export async function loginAdmin(formData: FormData) {
   const email = stringValue(formData, "email");
   const password = stringValue(formData, "password");
@@ -186,6 +192,8 @@ export async function deleteRow(formData: FormData) {
     "gallery_images",
     "services",
     "appointments",
+    "appointment_slots",
+    "appointment_unavailable_days",
     "blog_posts",
     "faqs",
     "media_assets",
@@ -207,6 +215,12 @@ export async function deleteRow(formData: FormData) {
   }
   if (table === "gallery_images") {
     revalidateGalleryContent();
+  } else if (
+    table === "appointments" ||
+    table === "appointment_slots" ||
+    table === "appointment_unavailable_days"
+  ) {
+    revalidateAppointments();
   } else {
     revalidateSiteContent();
   }
@@ -267,7 +281,61 @@ export async function updateAppointmentStatus(formData: FormData) {
     .update({ status: stringValue(formData, "status") })
     .eq("id", stringValue(formData, "id"));
 
+  revalidateAppointments();
   redirect("/admin?tab=appointments&success=Appointment updated");
+}
+
+export async function upsertAppointmentSlot(formData: FormData) {
+  const { supabase } = await requireAdmin();
+  const id = stringValue(formData, "id");
+  const payload = {
+    slot_date: stringValue(formData, "slot_date"),
+    slot_time: stringValue(formData, "slot_time"),
+    note: stringValue(formData, "note"),
+    is_enabled: formData.get("is_enabled") === "on",
+    updated_at: new Date().toISOString(),
+  };
+
+  if (!payload.slot_date || !payload.slot_time) {
+    redirect("/admin?tab=appointments&error=Slot date and time are required");
+  }
+
+  const query = id
+    ? supabase.from("appointment_slots").update(payload).eq("id", id)
+    : supabase.from("appointment_slots").insert(payload);
+  const { error } = await query;
+
+  if (error) {
+    redirect(`/admin?tab=appointments&error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidateAppointments();
+  redirect("/admin?tab=appointments&success=Appointment slot saved");
+}
+
+export async function upsertUnavailableDay(formData: FormData) {
+  const { supabase } = await requireAdmin();
+  const id = stringValue(formData, "id");
+  const payload = {
+    unavailable_date: stringValue(formData, "unavailable_date"),
+    reason: stringValue(formData, "reason"),
+  };
+
+  if (!payload.unavailable_date) {
+    redirect("/admin?tab=appointments&error=Unavailable date is required");
+  }
+
+  const query = id
+    ? supabase.from("appointment_unavailable_days").update(payload).eq("id", id)
+    : supabase.from("appointment_unavailable_days").insert(payload);
+  const { error } = await query;
+
+  if (error) {
+    redirect(`/admin?tab=appointments&error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidateAppointments();
+  redirect("/admin?tab=appointments&success=Unavailable day saved");
 }
 
 export async function upsertBlogPost(formData: FormData) {

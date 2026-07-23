@@ -24,12 +24,14 @@ import {
   updateSeo,
   updateSiteSettings,
   uploadMedia,
+  upsertAppointmentSlot,
   upsertBlogPost,
   upsertDoctorCredential,
   upsertDoctorExperience,
   upsertFaq,
   upsertGalleryImage,
   upsertService,
+  upsertUnavailableDay,
 } from "@/app/admin/actions";
 import { Button } from "@/components/ui/button";
 import { requireAdmin } from "@/lib/supabase/server";
@@ -105,6 +107,8 @@ export default async function AdminPage({
   let faqs: any[] = [];
   let seo: any = null;
   let media: any[] = [];
+  let appointmentSlots: any[] = [];
+  let unavailableDays: any[] = [];
 
   if (activeTab === "dashboard") {
     const [appointmentsResult, blogsResult, galleryResult] = await Promise.all([
@@ -156,8 +160,15 @@ export default async function AdminPage({
   }
 
   if (activeTab === "appointments") {
-    const appointmentsResult = await supabase.from("appointments").select("*").order("created_at", { ascending: false });
+    const [appointmentsResult, slotsResult, unavailableDaysResult] = await Promise.all([
+      supabase.from("appointments").select("*").order("created_at", { ascending: false }),
+      supabase.from("appointment_slots").select("*").order("slot_date", { ascending: true }).order("slot_time", { ascending: true }),
+      supabase.from("appointment_unavailable_days").select("*").order("unavailable_date", { ascending: true }),
+    ]);
+
     appointments = appointmentsResult.data || [];
+    appointmentSlots = slotsResult.data || [];
+    unavailableDays = unavailableDaysResult.data || [];
   }
 
   if (activeTab === "blog") {
@@ -255,7 +266,12 @@ export default async function AdminPage({
           {activeTab === "services" ? <ServicesPanel services={services} /> : null}
 
           {activeTab === "appointments" ? (
-            <AppointmentsPanel appointments={filteredAppointments} query={params.q || ""} />
+            <AppointmentsPanel
+              appointments={filteredAppointments}
+              slots={appointmentSlots}
+              unavailableDays={unavailableDays}
+              query={params.q || ""}
+            />
           ) : null}
 
           {activeTab === "blog" ? <BlogPanel posts={blogPosts} media={media} /> : null}
@@ -435,48 +451,124 @@ function ServicesPanel({ services }: { services: any[] }) {
   );
 }
 
-function AppointmentsPanel({ appointments, query }: { appointments: any[]; query: string }) {
+function AppointmentsPanel({
+  appointments,
+  slots,
+  unavailableDays,
+  query,
+}: {
+  appointments: any[];
+  slots: any[];
+  unavailableDays: any[];
+  query: string;
+}) {
   return (
-    <Panel title="Appointments" description="Search, update status, delete, and export appointment requests.">
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row">
-        <form className="flex flex-1 gap-2">
-          <input type="hidden" name="tab" value="appointments" />
-          <input
-            name="q"
-            defaultValue={query}
-            placeholder="Search appointments"
-            className="h-11 flex-1 rounded-md border border-border bg-background px-4 text-sm outline-none focus:border-primary"
-          />
-          <Button type="submit" variant="outline">Search</Button>
-        </form>
-        <Button asChild>
-          <Link href="/admin/appointments/export">Export CSV</Link>
-        </Button>
-      </div>
-      <div className="grid gap-3">
-        {appointments.map((appointment) => (
-          <div key={appointment.id} className="grid gap-3 rounded-lg border border-border bg-background p-4 lg:grid-cols-[1fr_auto_auto] lg:items-center">
-            <div>
-              <p className="font-bold">{appointment.patient_name}</p>
-              <p className="text-sm leading-6 text-muted-foreground">
-                {appointment.mobile_number} · {appointment.service_needed} · {appointment.preferred_date} · {appointment.preferred_time}
-              </p>
-              {appointment.message ? <p className="mt-1 text-sm text-muted-foreground">{appointment.message}</p> : null}
-            </div>
-            <form action={updateAppointmentStatus} className="flex gap-2">
-              <input type="hidden" name="id" value={appointment.id} />
-              <select name="status" defaultValue={appointment.status} className="h-10 rounded-md border border-border bg-white px-3 text-sm">
-                {["Pending", "Confirmed", "Completed", "Cancelled"].map((status) => (
-                  <option key={status} value={status}>{status}</option>
-                ))}
-              </select>
-              <Button type="submit" variant="outline">Update</Button>
-            </form>
-            <DeleteButton table="appointments" id={appointment.id} tab="appointments" />
+    <div className="grid gap-6">
+      <Panel title="Available appointment slots" description="Create date-specific slots, edit times, disable individual slots, and remove unused slots.">
+        <div className="grid gap-4">
+          <form action={upsertAppointmentSlot} className="grid gap-3 rounded-lg border border-border bg-background p-4 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end">
+            <Field name="slot_date" label="Slot Date" type="date" />
+            <Field name="slot_time" label="Slot Time" type="time" />
+            <Field name="note" label="Admin Note" />
+            <label className="flex h-11 items-center gap-2 text-sm font-bold">
+              <input type="checkbox" name="is_enabled" defaultChecked />
+              Enabled
+            </label>
+            <Button type="submit" className="w-fit sm:col-span-4">Add slot</Button>
+          </form>
+
+          <div className="grid gap-3">
+            {slots.map((slot) => (
+              <div key={slot.id} className="grid gap-3 rounded-lg border border-border bg-background p-4 lg:grid-cols-[1fr_auto] lg:items-end">
+                <form action={upsertAppointmentSlot} className="grid gap-3 sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-end">
+                  <input type="hidden" name="id" value={slot.id} />
+                  <Field name="slot_date" label="Slot Date" type="date" defaultValue={slot.slot_date} />
+                  <Field name="slot_time" label="Slot Time" type="time" defaultValue={slot.slot_time} />
+                  <Field name="note" label="Admin Note" defaultValue={slot.note} />
+                  <label className="flex h-11 items-center gap-2 text-sm font-bold">
+                    <input type="checkbox" name="is_enabled" defaultChecked={slot.is_enabled} />
+                    Enabled
+                  </label>
+                  <Button type="submit" variant="outline" className="w-fit sm:col-span-4">Save slot</Button>
+                </form>
+                <DeleteButton table="appointment_slots" id={slot.id} tab="appointments" />
+              </div>
+            ))}
+            {slots.length === 0 ? <EmptyState text="No appointment slots created yet." /> : null}
           </div>
-        ))}
-      </div>
-    </Panel>
+        </div>
+      </Panel>
+
+      <Panel title="Unavailable days" description="Mark full dates as holiday or leave. Patients will not see slots on these dates.">
+        <div className="grid gap-4">
+          <form action={upsertUnavailableDay} className="grid gap-3 rounded-lg border border-border bg-background p-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+            <Field name="unavailable_date" label="Unavailable Date" type="date" />
+            <Field name="reason" label="Reason" />
+            <Button type="submit">Add unavailable day</Button>
+          </form>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            {unavailableDays.map((day) => (
+              <div key={day.id} className="grid gap-3 rounded-lg border border-border bg-background p-4">
+                <form action={upsertUnavailableDay} className="grid gap-3">
+                  <input type="hidden" name="id" value={day.id} />
+                  <Field name="unavailable_date" label="Unavailable Date" type="date" defaultValue={day.unavailable_date} />
+                  <Field name="reason" label="Reason" defaultValue={day.reason} />
+                  <Button type="submit" variant="outline" className="w-fit">Save day</Button>
+                </form>
+                <DeleteButton table="appointment_unavailable_days" id={day.id} tab="appointments" />
+              </div>
+            ))}
+            {unavailableDays.length === 0 ? <EmptyState text="No unavailable days marked." /> : null}
+          </div>
+        </div>
+      </Panel>
+
+      <Panel title="Appointments" description="Search, update status, delete, and export appointment requests.">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row">
+          <form className="flex flex-1 gap-2">
+            <input type="hidden" name="tab" value="appointments" />
+            <input
+              name="q"
+              defaultValue={query}
+              placeholder="Search appointments"
+              className="h-11 flex-1 rounded-md border border-border bg-background px-4 text-sm outline-none focus:border-primary"
+            />
+            <Button type="submit" variant="outline">Search</Button>
+          </form>
+          <Button asChild>
+            <Link href="/admin/appointments/export">Export CSV</Link>
+          </Button>
+        </div>
+        <div className="grid gap-3">
+          {appointments.map((appointment) => (
+            <div key={appointment.id} className="grid gap-3 rounded-lg border border-border bg-background p-4 lg:grid-cols-[1fr_auto_auto] lg:items-center">
+              <div>
+                <p className="font-bold">{appointment.patient_name}</p>
+                <p className="text-sm leading-6 text-muted-foreground">
+                  {appointment.mobile_number} · {appointment.service_needed} · {appointment.preferred_date} · {appointment.preferred_time}
+                </p>
+                {appointment.appointment_slot_id ? (
+                  <p className="mt-1 text-xs font-semibold text-primary">Slot ID: {appointment.appointment_slot_id}</p>
+                ) : null}
+                {appointment.message ? <p className="mt-1 text-sm text-muted-foreground">{appointment.message}</p> : null}
+              </div>
+              <form action={updateAppointmentStatus} className="flex gap-2">
+                <input type="hidden" name="id" value={appointment.id} />
+                <select name="status" defaultValue={appointment.status} className="h-10 rounded-md border border-border bg-white px-3 text-sm">
+                  {["Pending", "Confirmed", "Completed", "Cancelled"].map((status) => (
+                    <option key={status} value={status}>{status}</option>
+                  ))}
+                </select>
+                <Button type="submit" variant="outline">Update</Button>
+              </form>
+              <DeleteButton table="appointments" id={appointment.id} tab="appointments" />
+            </div>
+          ))}
+          {appointments.length === 0 ? <EmptyState text="No appointments found." /> : null}
+        </div>
+      </Panel>
+    </div>
   );
 }
 
